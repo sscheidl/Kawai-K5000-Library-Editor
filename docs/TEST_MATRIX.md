@@ -57,3 +57,19 @@ still passes. Reference files supplied by the user are never modified by tests
 Corpus inventory as surveyed on 2026-08-23: 963 `.KA1`, 76 `.KAA` (all exactly
 134 660 bytes), 42 `.SYX`, 13 `.KCA`, 5 `.KRA`, 15 `.IMG` (all exactly
 1 474 560 bytes).
+
+The corpus is **private and never committed** — it contains commercial preset
+content. Its location comes from the `K5000_REFERENCE_CORPUS` CMake cache
+variable or the matching environment variable. Public tests run on the
+synthetic and freely redistributable fixtures in `testdata/fixtures/`; see
+[`../testdata/README.md`](../testdata/README.md).
+
+## Verification levels
+
+Each row's status is backed by the per-format `VerificationLevel`
+(`Unsupported → Experimental → Observed → GoldenTested → HardwareVerified`,
+tracked separately for Parsing, Writing and Conversion — decision Q4). A row
+reaches `GoldenTested` only with a passing round-trip and golden test, and
+`HardwareVerified` only with a dated row in
+[`HARDWARE_ACCEPTANCE.md`](HARDWARE_ACCEPTANCE.md). A test asserts this
+correspondence, so the levels cannot drift ahead of the evidence.

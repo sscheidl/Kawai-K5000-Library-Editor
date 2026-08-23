@@ -37,9 +37,21 @@ Do not implement multiple binary formats simultaneously. The order is:
 
 ```
 project/toolchain → GUI prototype → KA1 → KAA → Bank A/D workspace
-→ Single SysEx → KC1 → KCA → Multi workspace/references → FAT12
-→ IMG GUI → Deep Extract → integration → release hardening
+→ Single SysEx → FAT12 → IMG GUI → Deep Extract
+→ KC1 → KCA → Multi workspace/references
+→ integration → release hardening
 ```
+
+Multi is sequenced after the Single/IMG core by decision Q1 (2026-08-23), which
+amends specification §40. It remains a Version 1 goal.
+
+Every format module carries a `VerificationLevel` per axis
+(`Unsupported → Experimental → Observed → GoldenTested → HardwareVerified`, kept
+separately for Parsing, Writing and Conversion). Raising a level requires the
+corresponding evidence — a round-trip and golden test for `GoldenTested`, a dated
+row in `docs/HARDWARE_ACCEPTANCE.md` for `HardwareVerified`. Write paths below
+`GoldenTested` are off unless explicitly enabled. See
+[`docs/OPEN_QUESTIONS.md` Q4](docs/OPEN_QUESTIONS.md).
 
 ## Review priorities (specification §41)
 

@@ -47,3 +47,16 @@ GUI_prototyping/
 *.log
 scratch/
 tmp/
+
+# --- K5000 binary material (OPEN_QUESTIONS Q2) ---
+# The private reference corpus must never be committed. Only freely
+# redistributable / self-generated fixtures under testdata/fixtures are allowed.
+*.[Kk][Aa]1
+*.[Kk][Aa][Aa]
+*.[Kk][Cc]1
+*.[Kk][Cc][Aa]
+*.[Kk][Rr][Aa]
+*.[Kk][Bb]1
+*.[Ss][Yy][Xx]
+*.[Ii][Mm][Gg]
+!testdata/fixtures/**

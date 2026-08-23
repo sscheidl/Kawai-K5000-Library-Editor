@@ -1,122 +1,113 @@
-# Open questions
+# Open questions and decisions
 
-Decisions required from the project owner. Each entry states the question, why it
-matters, and a recommendation. Nothing below is decided until this file records a
-decision and a date.
+Decisions are binding once recorded here with a date. Reopening one is itself a
+recorded decision, not a silent change.
 
 ---
 
 ## Q1 — V1 scope cut: does Multi move to V1.1?
 
-**Context.** Specification §11 makes KC1/KCA and Multi reference management
-mandatory for V1. The reference corpus contains only 13 KCA files and no loose
-KC1, and the Multi formats are currently at confidence level *Unknown*. Multi
-reference management (§11: detect affected Multis when a Single moves, offer to
-update references, make that undoable) is one of the more intricate parts of the
-whole application, and it depends on the Single bank model already being final.
+**DECIDED 2026-08-23 — Multi stays a V1 goal, but is sequenced after the
+Single/IMG core. No guessing if the format is still unclear.**
 
-**Why it matters.** Multi sits between "Bank A/D workspace" and "FAT12" in the
-implementation order (§40). If it stays in V1 and turns out to need extended
-research, it blocks the Gotek workflow — which is the feature with the clearest
-practical payoff.
+Consequence for the implementation order (amends specification §40):
 
-**Recommendation.** Split it: keep **KC1/KCA parse, display and byte-exact
-pass-through into disk images** in V1, and move **Multi editing plus automatic
-reference updating** to V1.1. That keeps Multis usable in the Gotek workflow
-without gating V1 on the hardest correctness problem in the project.
+```
+project/toolchain → GUI prototype → KA1 → KAA → Bank A/D workspace
+→ Single SysEx → FAT12 → IMG GUI → Deep Extract
+→ KC1 → KCA → Multi workspace/references
+→ integration → release hardening
+```
 
-**Decision:** _pending_
+Multi therefore comes after the Gotek workflow is working, not before it. The
+"no guessing" clause is operative: if KC1/KCA research does not reach
+`GoldenTested`, Multi write support does not ship — it stays at whatever
+`VerificationLevel` the evidence supports, and the release notes say so. That is
+a Version 1 limitation, not a reason to invent field meanings.
 
 ---
 
 ## Q2 — Reference files for `testdata/`
 
-**Context.** A substantial local corpus exists at
-`D:\Backup\…\Kawai K5000S\Presets` (963 KA1, 76 KAA, 42 SYX, 13 KCA, 5 KRA,
-15 IMG). It is treated as **read-only source material** and is never modified by
-this project or its tests (§26). Part of it is commercial third-party content
-(e.g. an LFO Store bundle) and part is from public repositories.
+**DECIDED 2026-08-23 — Real commercial files are used as a private local golden
+corpus and are never committed. Public tests run on synthetic and freely
+redistributable fixtures.**
 
-**Why it matters.** Committing that material into a public GitHub repository would
-redistribute commercial presets. But golden-file tests are worthless without real
-reference data.
+Implementation:
 
-**Recommendation.** Three tiers:
+1. `testdata/` in the repository contains only self-generated fixtures and files
+   whose redistribution is unambiguously permitted.
+2. The external corpus lives outside the repository and is **read-only**. Its
+   location is configured through the CMake cache variable
+   `K5000_REFERENCE_CORPUS` or the equivalent environment variable — never
+   hard-coded, never written to.
+3. `testdata/REFERENCE_MANIFEST.csv` records relative path, size and SHA-256 for
+   each corpus file, so a golden test can assert it is reading the file it
+   expects without the file being present in the repository.
+4. Golden tests that need the corpus **skip with an explanatory message** when it
+   is absent. A clean public checkout passes.
+5. `.gitignore` and CI guard against accidental commits of
+   `.KA1/.KAA/.KC1/.KCA/.KRA/.SYX/.IMG` outside the permitted fixture set.
 
-1. `testdata/` in the repository contains only **self-generated fixtures** plus
-   any file whose redistribution is unambiguously permitted — small, and safe to
-   publish.
-2. A **manifest** (`testdata/REFERENCE_MANIFEST.csv`: relative path, size,
-   SHA-256) describes the external corpus. Tests that need it are skipped with a
-   clear message when the corpus is absent, so a clean public checkout still
-   passes.
-3. The corpus location is configured once via a CMake cache variable
-   (`K5000_REFERENCE_CORPUS`) or an environment variable, never hard-coded.
-
-Open sub-question: should the repository be **public or private**? If private,
-tier 1 can be more generous. This also gates the license choice (no `LICENSE`
-file exists yet).
-
-**Decision:** _pending_
+Corpus location in use:
+`D:\Backup\Backup_System\Music Production\Audio Hardware\Kawai K5000S\Presets`
+— **read-only, never modified or deleted by this project or its tests.**
 
 ---
 
 ## Q3 — Capacity model: warning or hard gate?
 
-**Context.** Specification §8 says "Prevent export as *valid K5000 bank* if
-verified capacity limits are exceeded". The capacity rules themselves are not yet
-researched, and the fixed 134 660-byte KAA size suggests the real constraint is a
-data-region budget rather than the 128-slot count.
+**DECIDED 2026-08-23 — Only verified limits are hard gates. Unconfirmed capacity
+models produce warnings.**
 
-**Why it matters.** A hard gate built on a capacity model that is still at
-confidence level *Observed* will block legitimate exports. A pure warning risks
-producing banks the hardware rejects.
+| Capacity model level | Behaviour on "export as valid K5000 bank" |
+| --- | --- |
+| `GoldenTested` / `HardwareVerified` | Hard gate. Export refused; explicit, logged override required. |
+| `Observed` / `Experimental` | Prominent warning with a written reason. Export allowed. |
+| `Unsupported` | No capacity claim made; export allowed, no capacity statement in the log. |
 
-**Recommendation.** Tie the behaviour to the confidence level, and show it:
-
-- Capacity model **Verified** → hard gate on "export as valid K5000 bank", with an
-  explicit, logged override.
-- Capacity model **Observed / Documented** → prominent warning plus a written
-  reason, export allowed.
-- Always display used/free budget in the UI, and always record the state in the
-  export log.
-
-This satisfies §8 once research completes, without blocking work before it does.
-
-**Decision:** _pending_
+Used/free budget is always displayed in the UI, and the capacity state is always
+recorded in the export log regardless of level.
 
 ---
 
-## Q4 — Verified/Unverified flag per format
+## Q4 — Verification flag per format
 
-**Context.** Specification §6 and §30 forbid claiming support for unverified
-variants. [`FORMAT_NOTES.md`](FORMAT_NOTES.md) already defines four confidence
-levels (Verified / Documented / Observed / Unknown).
+**DECIDED 2026-08-23 — `VerificationLevel` is anchored technically in the core,
+tracked separately for Parsing, Writing and Conversion.**
 
-**Why it matters.** The flag needs to be a real, machine-readable property of each
-format module — otherwise it decays into a documentation claim that the code
-contradicts, which is exactly what §41 tells the reviewing agent not to trust.
+```
+Unsupported → Experimental → Observed → GoldenTested → HardwareVerified
+```
 
-**Recommendation.** Make it structural rather than documentary:
+| Level | Meaning |
+| --- | --- |
+| `Unsupported` | Not implemented, or understood too poorly to act on. No semantic claim. |
+| `Experimental` | Implemented from a documented source; not yet reproduced against reference files. Off by default for writing. |
+| `Observed` | Reproduced consistently across reference files, no documentary confirmation. |
+| `GoldenTested` | Round-trip and golden-file tests pass against the reference corpus. |
+| `HardwareVerified` | Confirmed on the real K5000S / Gotek and logged in `HARDWARE_ACCEPTANCE.md`. |
 
-- Each format module exposes a `FormatSupport` descriptor carrying its confidence
-  level, the evidence reference, and separate read/write capability flags. Read
-  support may legitimately be ahead of write support.
-- The GUI derives its wording from that descriptor. Anything below *Verified* is
-  labelled experimental in the UI and in export logs, and non-`Verified` **write**
-  paths are off unless explicitly enabled.
-- `k5000cli formats` prints the table, so the reviewing agent can diff claimed
-  support against actual test coverage in one command.
-- A test asserts that every `Verified` claim has a corresponding round-trip and
-  golden test — the flag cannot be raised without evidence.
+Rules:
 
-**Decision:** _pending_
+- Each format module exposes a descriptor carrying the three axis levels plus an
+  evidence reference. The axes move independently — parsing routinely leads
+  writing, and conversion is gated by the weaker of its two endpoints.
+- The GUI and the export log derive their wording from the descriptor. Nothing
+  below `GoldenTested` is presented as plain "supported".
+- **Write paths below `GoldenTested` are disabled unless explicitly enabled** by
+  the user, and every such export is logged with its level.
+- `k5000cli formats` prints the full table, so the reviewing agent can diff
+  claimed support against actual test coverage in one command.
+- A test asserts that every `GoldenTested` claim has a corresponding round-trip
+  and golden test, and every `HardwareVerified` claim has a dated row in
+  `HARDWARE_ACCEPTANCE.md`. The level cannot be raised without evidence.
 
 ---
 
 ## Q5 — Prototype contradicts the specification on Bank A/D layout
 
-**Not on the original list, but it blocks `UI_SPEC.md`.**
+**Status: open. Blocks completion of `UI_SPEC.md`.**
 
 Specification §2 requires: *"left: Library / imported presets, center: Bank A and
 Bank D, right: Inspector"* and *"Bank A and Bank D should be visible
@@ -126,13 +117,13 @@ The approved prototype v3 (`prototype/gui/GUI_HANDOFF.md`) instead describes *"a
 single central workspace with switch: Bank A / Bank D / Multi"* — one bank visible
 at a time.
 
-These cannot both hold. Which one wins?
+These cannot both hold.
 
-**Recommendation.** The specification, with the prototype's switch retained as a
-density mode: show A and D side by side by default at ≥ 1920 px, and fall back to
-the switched single-workspace view at narrower widths or when the user picks a
-detailed card density. Multi stays a separate destination in the main navigation
-(§2 lists it as its own section, not as a third tab of the bank workspace).
+**Recommendation.** The specification wins, with the prototype's switch retained
+as a fallback: A and D side by side by default at >= 1920 px, falling back to the
+switched single-workspace view at narrower widths or at Detailed card density.
+Multi stays its own destination in the main navigation, since §2 lists it as a
+separate section rather than a third tab of the bank workspace.
 
 **Decision:** _pending_
 
@@ -140,12 +131,22 @@ detailed card density. Multi stays a separate destination in the main navigation
 
 ## Q6 — Test framework
 
-No framework has been chosen. Golden-file and binary round-trip testing is the
-dominant use case.
+**Status: open.** Golden-file and binary round-trip testing is the dominant use
+case.
 
 **Recommendation.** Catch2 v3 via CMake `FetchContent`, pinned to a release tag.
-It handles binary comparison and data-driven cases well and adds no runtime
-dependency to the shipped application. GoogleTest is the equally defensible
-alternative. Either way it gets recorded in `THIRD_PARTY_NOTICES.md`.
+Good binary comparison and data-driven cases, no runtime dependency in the
+shipped application. GoogleTest is the equally defensible alternative. Either way
+it is recorded in `THIRD_PARTY_NOTICES.md`.
+
+**Decision:** _pending_
+
+---
+
+## Q7 — Repository visibility and license
+
+**Status: open.** Q2 is satisfied either way, but the license choice depends on
+whether this becomes a public repository. No `LICENSE` file exists yet, so no
+redistribution terms are currently granted.
 
 **Decision:** _pending_

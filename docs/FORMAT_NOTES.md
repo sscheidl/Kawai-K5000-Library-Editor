@@ -1,32 +1,52 @@
 # Format notes
 
-Working document for Phase A. **Nothing here may be promoted to implementation
-while it is still marked _Observed_ or _Unknown_.** Specification §6/§30: never
-claim support for an unverified variant, and never guess undocumented binary
-fields silently.
+Working document for Phase A. Specification §6/§30: never claim support for an
+unverified variant, and never guess undocumented binary fields silently.
 
-## Confidence levels
+## Verification levels
+
+The scale is defined in [`OPEN_QUESTIONS.md` Q4](OPEN_QUESTIONS.md) (decided
+2026-08-23) and is anchored in the core as a `VerificationLevel`, tracked
+**separately for Parsing, Writing and Conversion**:
+
+```
+Unsupported → Experimental → Observed → GoldenTested → HardwareVerified
+```
 
 | Level | Meaning |
 | --- | --- |
-| **Verified** | Confirmed by documentation *and* reproduced across ≥ 2 independent reference files, with a round-trip test. |
-| **Documented** | Described by a credible source, not yet reproduced against reference files here. |
-| **Observed** | Seen consistently in reference files, no documentary confirmation yet. |
-| **Unknown** | Not understood. Bytes are preserved verbatim; no semantic claim is made. |
+| `Unsupported` | Not implemented, or understood too poorly to act on. No semantic claim; bytes are preserved verbatim. |
+| `Experimental` | Implemented from a documented source; not yet reproduced against reference files. Writing off by default. |
+| `Observed` | Reproduced consistently across reference files, no documentary confirmation yet. |
+| `GoldenTested` | Round-trip and golden-file tests pass against the reference corpus. |
+| `HardwareVerified` | Confirmed on the real K5000S / Gotek and logged in `HARDWARE_ACCEPTANCE.md`. |
+
+The axes move independently — parsing routinely leads writing, and a conversion
+is capped by the weaker of its two endpoints. Write paths below `GoldenTested`
+are disabled unless the user explicitly enables them, and every such export is
+logged with its level.
+
+This document is the evidence record behind those levels. Raising a level here
+without the corresponding test is exactly the kind of unbacked claim §41 tells
+the reviewing agent not to trust.
 
 ## Per-format status
 
-| Format | V1 scope | Status | Notes |
-| --- | --- | --- | --- |
-| KA1 (single) | required | Observed | Header + 8-char name located; body layout open |
-| KAA (single bank) | required | Observed | 4-byte big-endian pointer table located |
-| Single SysEx | required | Unknown | Framing not yet examined |
-| Bank SysEx | only if verifiable | Unknown | May be dropped from V1 |
-| KC1 (multi) | required | Unknown | Not yet examined |
-| KCA (multi bank) | required | Unknown | Not yet examined |
-| Multi SysEx | only if verifiable | Unknown | May be dropped from V1 |
-| KRA (arpeggio) | pass-through only | Unknown | Stored in images, never parsed in V1 |
-| FAT12 / 1.44 MB IMG | required | Documented | Standard IBM-PC FAT12; industry-documented |
+| Format | V1 scope | Parsing | Writing | Conversion | Notes |
+| --- | --- | --- | --- | --- | --- |
+| KA1 (single) | required | `Observed` | `Unsupported` | `Unsupported` | Header block + 8-char name located; body layout open |
+| KAA (single bank) | required | `Observed` | `Unsupported` | `Unsupported` | 4-byte big-endian pointer table located; base address unknown |
+| Single SysEx | required | `Unsupported` | `Unsupported` | `Unsupported` | Framing not yet examined |
+| Bank SysEx | only if verifiable | `Unsupported` | `Unsupported` | `Unsupported` | May be dropped from V1 |
+| KC1 (multi) | required, after Single/IMG core | `Unsupported` | `Unsupported` | `Unsupported` | Not yet examined (Q1) |
+| KCA (multi bank) | required, after Single/IMG core | `Unsupported` | `Unsupported` | `Unsupported` | Not yet examined (Q1) |
+| Multi SysEx | only if verifiable | `Unsupported` | `Unsupported` | `Unsupported` | May be dropped from V1 |
+| KRA (arpeggio) | pass-through only | `Unsupported` | `Unsupported` | n/a | Stored in images byte-exact, never parsed in V1 |
+| FAT12 / 1.44 MB IMG | required | `Experimental` | `Unsupported` | n/a | Publicly specified format; nothing implemented yet |
+
+Bank capacity is tracked on the same scale, currently `Unsupported`. Per
+[Q3](OPEN_QUESTIONS.md), it produces warnings rather than a hard export gate
+until it reaches `GoldenTested`.
 
 ## Sources
 
@@ -45,7 +65,8 @@ preference.
 
 ## Reference corpus
 
-Local, read-only. See [`TEST_MATRIX.md`](TEST_MATRIX.md) for how it is used.
+Private local golden corpus (OPEN_QUESTIONS Q2): **read-only, never committed,
+never modified by tests**. Public tests use synthetic fixtures. See [`TEST_MATRIX.md`](TEST_MATRIX.md) for how it is used.
 
 | Type | Count | Sizes |
 | --- | --- | --- |
@@ -63,7 +84,7 @@ early validation.
 
 ## KA1 — single preset
 
-**Status: Observed.** First evidence pass over `Africa.KA1` (1866 B),
+**Parsing: `Observed`.** First evidence pass over `Africa.KA1` (1866 B),
 `CybaBars.KA1` (1060 B), `BassTalk.KA1` (1952 B), `BellWing.KA1` (1952 B),
 `Century.KA1` (1866 B), `Choruz.KA1` (1866 B).
 
@@ -98,7 +119,7 @@ early validation.
 
 ## KAA — single bank
 
-**Status: Observed.** Evidence: `ABANKINT.KAA` and `lead3.kaa`, plus the size
+**Parsing: `Observed`.** Evidence: `ABANKINT.KAA` and `lead3.kaa`, plus the size
 census over all 76 reference banks.
 
 ### Established
@@ -142,18 +163,18 @@ census over all 76 reference banks.
 
 ## Single SysEx
 
-**Status: Unknown.** Not yet examined. Must establish manufacturer ID, model ID,
+**Parsing: `Unsupported`.** Not yet examined. Must establish manufacturer ID, model ID,
 message framing, length encoding, bank/slot metadata and checksum before any
 claim of support (specification §30).
 
 ## KC1 / KCA — multi
 
-**Status: Unknown.** Not yet examined. Scope decision pending — see
+**Parsing: `Unsupported`.** Not yet examined. Scope decision pending — see
 [`OPEN_QUESTIONS.md`](OPEN_QUESTIONS.md).
 
 ## FAT12 / 1.44 MB IMG
 
-**Status: Documented.** Standard IBM-PC 1.44 MB layout: 512-byte sectors, 2 heads,
+**Parsing: `Experimental`.** Standard IBM-PC 1.44 MB layout: 512-byte sectors, 2 heads,
 80 cylinders, 18 sectors/track, 2 FAT copies, 224 root directory entries,
 1 sector/cluster. Total 2880 sectors = 1 474 560 bytes, matching every reference
 image exactly.

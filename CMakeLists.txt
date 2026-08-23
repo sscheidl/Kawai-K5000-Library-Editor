@@ -17,6 +17,17 @@ option(K5000_BUILD_GUI   "Build the Qt 6 Widgets desktop application" ON)
 option(K5000_BUILD_CLI   "Build the k5000cli diagnostic tool"         ON)
 option(K5000_BUILD_TESTS "Build the automated test suite"             ON)
 
+# Location of the private, read-only K5000 reference corpus used by golden tests
+# (OPEN_QUESTIONS Q2). Never committed, never written to. Golden tests that need
+# it skip with an explanatory message when it is unset or missing.
+set(K5000_REFERENCE_CORPUS "$ENV{K5000_REFERENCE_CORPUS}" CACHE PATH
+    "Path to the read-only K5000 reference corpus (optional; enables golden tests)")
+
+if(K5000_REFERENCE_CORPUS AND NOT EXISTS "${K5000_REFERENCE_CORPUS}")
+    message(WARNING "K5000_REFERENCE_CORPUS is set but does not exist: ${K5000_REFERENCE_CORPUS}")
+    set(K5000_REFERENCE_CORPUS "")
+endif()
+
 # ---------------------------------------------------------------------------
 # Subsystems are added as they land (see docs/ARCHITECTURE.md, spec section 40).
 # The guard keeps a clean checkout configurable while the tree is still growing.
@@ -66,4 +77,5 @@ message(STATUS "  Compiler : ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSI
 message(STATUS "  GUI      : ${K5000_BUILD_GUI} (Qt6 found: ${Qt6_FOUND})")
 message(STATUS "  CLI      : ${K5000_BUILD_CLI}")
 message(STATUS "  Tests    : ${K5000_BUILD_TESTS}")
+message(STATUS "  Corpus   : ${K5000_REFERENCE_CORPUS}")
 message(STATUS "----------------------------------------------------------")
