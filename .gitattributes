@@ -1,0 +1,25 @@
+* text=auto eol=lf
+
+*.sln       text eol=crlf
+*.vcxproj   text eol=crlf
+*.bat       text eol=crlf
+*.ps1       text eol=crlf
+
+# K5000 / binary reference material must never be line-ending mangled.
+*.KA1  binary
+*.ka1  binary
+*.KAA  binary
+*.kaa  binary
+*.KC1  binary
+*.kc1  binary
+*.KCA  binary
+*.kca  binary
+*.KRA  binary
+*.kra  binary
+*.SYX  binary
+*.syx  binary
+*.IMG  binary
+*.img  binary
+*.bin  binary
+*.png  binary
+*.zip  binary

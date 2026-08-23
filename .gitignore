@@ -1,0 +1,49 @@
+# --- Build output ---
+build/
+build-*/
+out/
+cmake-build-*/
+install/
+_deps/
+
+# --- CMake ---
+CMakeUserPresets.json
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+compile_commands.json
+
+# --- Visual Studio / VS Code / Qt Creator ---
+.vs/
+.vscode/
+*.user
+*.vcxproj.user
+*.sln.docstates
+CMakeLists.txt.user*
+
+# --- Qt generated ---
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+*.moc
+
+# --- Binaries / objects ---
+*.obj
+*.o
+*.exe
+*.dll
+*.pdb
+*.ilk
+*.lib
+*.exp
+
+# --- Local prototype archives (extracted to prototype/gui) ---
+*.zip
+GUI_prototyping/
+
+# --- Local scratch / logs ---
+*.log
+scratch/
+tmp/

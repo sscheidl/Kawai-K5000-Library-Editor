@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>K5000 Librarian & Gotek Builder – GUI Prototype v3</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app" tabindex="0">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">K5</div>
+      <div>
+        <strong>K5000 Librarian</strong>
+        <small>Gotek Builder · GUI Prototype v3</small>
+      </div>
+    </div>
+
+    <nav class="tabs" aria-label="Main navigation">
+      <button class="tab active" data-page="banks">Banks</button>
+      <button class="tab" data-page="images">Disk Images</button>
+      <button class="tab" data-page="sysex">SysEx</button>
+      <button class="tab" data-page="settings">Settings</button>
+    </nav>
+
+    <div class="toolbar">
+      <button id="undoBtn" disabled>↶ Undo</button>
+      <button id="redoBtn" disabled>↷ Redo</button>
+      <button id="validateBtn">✓ Validate</button>
+      <button id="saveBtn" class="primary">Save</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="page-banks" class="page active">
+      <div class="banks-layout">
+        <aside class="panel library-panel">
+          <div class="panel-head">
+            <h2>Library</h2>
+            <span class="badge">10,036 presets</span>
+          </div>
+          <div class="library-controls">
+            <input id="searchInput" type="search" placeholder="Search presets…" aria-label="Search presets">
+            <div class="chips">
+              <button class="chip active" data-filter="all">All</button>
+              <button class="chip" data-filter="add">ADD</button>
+              <button class="chip" data-filter="pcm">PCM</button>
+              <button class="chip" data-filter="mixed">Mixed</button>
+            </div>
+          </div>
+          <div id="libraryList" class="library-list"></div>
+        </aside>
+
+        <section class="panel workspace-panel">
+          <div class="workspace-top">
+            <div class="group">
+              <span class="group-label">Workspace</span>
+              <div id="bankSwitch" class="segmented">
+                <button class="active" data-bank="A">Bank A</button>
+                <button data-bank="D">Bank D</button>
+                <button data-bank="M">Multi</button>
+              </div>
+            </div>
+
+            <div class="group">
+              <span class="group-label">Visible slots</span>
+              <div id="visibleSwitch" class="segmented">
+                <button data-count="16">16</button>
+                <button data-count="32">32</button>
+                <button class="active" data-count="64">64</button>
+                <button data-count="128">128</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bank-actions">
+            <span class="group-label">Current bank</span>
+            <button id="exportSelectedTop">Export Patch(es) as KA1</button>
+            <button id="convertBankSyx">Convert Bank A to SysEx</button>
+            <button id="sendBankImg">Send Bank A to .IMG</button>
+          </div>
+
+          <div class="summary-row">
+            <span><i class="status-dot"></i><b id="bankTitle">Bank A</b> valid</span>
+            <span id="occupiedText">58 / 128 occupied</span>
+            <span id="capacityText">ADD 121 / 137</span>
+            <span id="selectionText">0 selected</span>
+          </div>
+
+          <div class="meter"><i id="meterFill"></i></div>
+
+          <div id="bankCanvas" class="bank-canvas">
+            <div id="slotGrid" class="slot-grid view-64"></div>
+            <div id="lasso" class="lasso"></div>
+          </div>
+
+          <div class="hint-row">
+            <span>Ctrl-click = toggle · Shift-click = range · drag empty area = lasso · right-click = actions</span>
+            <span><kbd>Ctrl+C</kbd> <kbd>Ctrl+X</kbd> <kbd>Ctrl+V</kbd> <kbd>Ctrl+Z</kbd> <kbd>Ctrl+Y</kbd></span>
+          </div>
+        </section>
+
+        <aside class="panel inspector-panel">
+          <div class="panel-head">
+            <h2>Inspector</h2>
+            <span id="inspectorSlot" class="badge">—</span>
+          </div>
+
+          <div class="preview">Audition / sound preview reserved for V1.5</div>
+
+          <h3 id="inspectorName">No selection</h3>
+          <p id="inspectorOrigin" class="muted">Select one or more slots</p>
+
+          <dl class="kv">
+            <dt>Sources</dt><dd id="inspectorSources">—</dd>
+            <dt>Size</dt><dd id="inspectorSize">—</dd>
+            <dt>Selection</dt><dd id="inspectorCount">0 items</dd>
+            <dt>Status</dt><dd>Valid</dd>
+          </dl>
+
+          <div class="inspector-actions">
+            <button id="renameBtn">Rename <kbd>F2</kbd></button>
+            <button id="clearBtn">Clear <kbd>Del</kbd></button>
+            <button id="copyBtn">Copy</button>
+            <button id="cutBtn">Cut</button>
+            <button id="pasteBtn">Paste</button>
+            <button id="exportSelectedBtn">Export as KA1</button>
+            <button id="convertSelectedBtn">Convert to SysEx</button>
+            <button id="sendSelectedImgBtn">Send to .IMG</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="page-images" class="page content-page">
+      <div class="page-title">
+        <div>
+          <h1>Disk Image / Gotek Builder</h1>
+          <p>1.44 MB FAT12 · GUI prototype only</p>
+        </div>
+        <button id="createImgBtn" class="primary">Create IMG from Workspace</button>
+      </div>
+
+      <div class="two-col">
+        <article class="card">
+          <h2>023_MODERN.IMG</h2>
+          <div class="disk-stat">1.12 MB <span>free</span></div>
+          <div class="meter"><i style="width:19%"></i></div>
+          <div id="imgFileList"></div>
+
+          <div class="card-actions">
+            <button id="imgAddBtn">Add Files</button>
+            <button id="imgRemoveBtn">Remove</button>
+            <button id="extractAllBtn">Extract All</button>
+            <button id="deepExtractBtn">Deep Extract</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Explorer Drop</h2>
+          <div id="imgDropZone" class="drop-zone">
+            Drop KAA / KCA / KRA / KA1 / SYX here
+            <small>Prototype records filenames only</small>
+          </div>
+          <p class="muted">Whole banks and selected patches can also be sent directly into the current image workspace.</p>
+          <button id="validateImgBtn">Validate Image</button>
+        </article>
+      </div>
+    </section>
+
+    <section id="page-sysex" class="page content-page">
+      <div class="page-title">
+        <div>
+          <h1>SysEx</h1>
+          <p>Offline conversion in V1 · live MIDI planned for V1.5</p>
+        </div>
+        <span class="badge">V1.5: Send / Receive / Audition</span>
+      </div>
+
+      <div class="two-col">
+        <article class="card">
+          <h2>Selection → SysEx</h2>
+          <p class="muted">Convert one or more selected Bank A/D patches into individual .syx files.</p>
+          <button id="syxSelectionBtn">Convert selected Patch(es)</button>
+        </article>
+        <article class="card">
+          <h2>Whole Bank → SysEx</h2>
+          <p class="muted">Convert the active A/D bank using the verified K5000 SysEx representation.</p>
+          <button id="syxBankBtn" class="primary">Convert current Bank</button>
+        </article>
+      </div>
+    </section>
+
+    <section id="page-settings" class="page content-page">
+      <div class="page-title">
+        <div>
+          <h1>Settings</h1>
+          <p>Prototype interaction settings</p>
+        </div>
+      </div>
+
+      <article class="card settings-card">
+        <div class="setting-row">
+          <div>
+            <strong>Default visible slots</strong>
+            <small>16 / 32 / 64 / 128 for Bank A and D</small>
+          </div>
+          <select id="defaultVisible">
+            <option>16</option>
+            <option>32</option>
+            <option selected>64</option>
+            <option>128</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div>
+            <strong>Lasso selection</strong>
+            <small>Drag from empty canvas space</small>
+          </div>
+          <select><option selected>Enabled</option><option>Disabled</option></select>
+        </div>
+        <div class="setting-row">
+          <div>
+            <strong>Mouse buttons 4 / 5</strong>
+            <small>Navigate selection history</small>
+          </div>
+          <select><option selected>Back / Forward</option><option>Unassigned</option></select>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="statusbar">
+    <span id="statusText"><i class="status-dot"></i>Ready · GUI prototype only</span>
+    <span>Right-click selection for KA1 / SysEx / IMG actions</span>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <div id="contextMenu" class="context-menu" role="menu">
+    <div id="contextTitle" class="context-title">Selected patches</div>
+    <button data-action="export">Export Patch(es) as KA1…</button>
+    <button data-action="syx">Convert Patch(es) to SysEx…</button>
+    <button data-action="img">Send Patch(es) to .IMG…</button>
+    <hr>
+    <button data-action="copy">Copy</button>
+    <button data-action="cut">Cut</button>
+    <button data-action="paste">Paste</button>
+    <hr>
+    <button data-action="rename">Rename</button>
+    <button data-action="clear">Clear selected Slot(s)</button>
+  </div>
+
+  <div id="dialogBackdrop" class="dialog-backdrop">
+    <div class="dialog">
+      <h2 id="dialogTitle">Action</h2>
+      <p id="dialogMessage"></p>
+      <div id="dialogDetails" class="dialog-details"></div>
+      <div class="dialog-actions">
+        <button id="dialogCancel">Cancel</button>
+        <button id="dialogOk" class="primary">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
