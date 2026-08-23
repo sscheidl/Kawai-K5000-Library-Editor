@@ -1,6 +1,10 @@
 {
   "version": 6,
-  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 24,
+    "patch": 0
+  },
   "configurePresets": [
     {
       "name": "base",
@@ -16,7 +20,9 @@
       "inherits": "base",
       "generator": "Visual Studio 17 2022",
       "architecture": "x64",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.10.3/msvc2022_64"
+      }
     },
     {
       "name": "windows-msvc-release",
@@ -24,7 +30,9 @@
       "inherits": "base",
       "generator": "Visual Studio 17 2022",
       "architecture": "x64",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.10.3/msvc2022_64"
+      }
     },
     {
       "name": "core-only",
@@ -37,21 +45,36 @@
     }
   ],
   "buildPresets": [
-    { "name": "windows-msvc-debug",   "configurePreset": "windows-msvc-debug",   "configuration": "Debug" },
-    { "name": "windows-msvc-release", "configurePreset": "windows-msvc-release", "configuration": "RelWithDebInfo" },
-    { "name": "core-only",            "configurePreset": "core-only" }
+    {
+      "name": "windows-msvc-debug",
+      "configurePreset": "windows-msvc-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-release",
+      "configurePreset": "windows-msvc-release",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "core-only",
+      "configurePreset": "core-only"
+    }
   ],
   "testPresets": [
     {
       "name": "windows-msvc-debug",
       "configurePreset": "windows-msvc-debug",
       "configuration": "Debug",
-      "output": { "outputOnFailure": true }
+      "output": {
+        "outputOnFailure": true
+      }
     },
     {
       "name": "core-only",
       "configurePreset": "core-only",
-      "output": { "outputOnFailure": true }
+      "output": {
+        "outputOnFailure": true
+      }
     }
   ]
 }

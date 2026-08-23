@@ -15,24 +15,47 @@ Visual Studio, CMake or Qt update and update this table.
 | MSBuild | `…\2022\BuildTools\MSBuild\Current\Bin\amd64\MSBuild.exe` | OK |
 | Ninja | bundled with both Build Tools installations under `Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja` | Available, not on `PATH` |
 | Git | 2.53.0.windows.1 | OK |
+| **Qt** | **6.10.3**, `C:\Qt\6.10.3\msvc2022_64` | OK — Core, Gui and Widgets present, `windeployqt.exe` present |
 
 ### Configure smoke test
 
 ```
-cmake -S . -B build/toolchain-check -G "Visual Studio 17 2022" -A x64
+cmake --preset windows-msvc-debug
 ```
 
-Result: **Configuring done / Generating done**, `CMAKE_CXX_COMPILER_ID = MSVC`,
-version `19.44.35227.0`. The scaffold configures cleanly on a clean checkout.
+Result: **Configuring done / Generating done**, `CMAKE_CXX_COMPILER_ID = MSVC`
+`19.44.35227.0`, `Qt6 found: 1`. The `src/gui` and `src/app` subdirectories are
+still reported as skipped because no GUI code exists yet — Qt detection is what
+this test establishes.
 
 ## Missing — action required
 
-| Component | Impact | Resolution |
-| --- | --- | --- |
-| **Qt 6 (Widgets, MSVC 2022 x64)** | GUI target is skipped; core, CLI and tests still build | Install via the Qt Online Installer, then configure with `-DCMAKE_PREFIX_PATH=C:/Qt/<version>/msvc2022_64`. Qt ≥ 6.5 is required by `CMakeLists.txt`. |
+Nothing. The toolchain is complete for the work in progress.
 
-`windeployqt` from the same Qt installation will be used for packaging (§39
-"Qt deployment dependencies are correctly packaged").
+## Qt
+
+Installed: **6.10.3**, MSVC 2022 x64, at `C:\Qt\6.10.3\msvc2022_64`.
+
+The presets carry that path in `CMAKE_PREFIX_PATH`, so an ordinary
+`cmake --preset windows-msvc-debug` finds Qt with no extra flags. Override it on
+the command line if Qt lives somewhere else on another machine:
+
+```
+cmake --preset windows-msvc-debug -DCMAKE_PREFIX_PATH=<path>/msvc2022_64
+```
+
+`CMakeLists.txt` requires Qt ≥ 6.5 and only the Widgets component. If Qt is
+absent the GUI target is skipped with a warning and core, CLI and tests still
+build — that path stays supported so CI needs no Qt.
+
+**Version choice.** 6.10.3 is not an LTS release. Qt's LTS patch releases (the
+6.8.x series) are commercial-only in the Online Installer, so the open-source
+installer offers the current feature releases instead. That is fine here: the
+project uses Qt Widgets and nothing version-sensitive. Pin deliberately if a
+future Qt update ever breaks the GUI.
+
+`windeployqt.exe` from the same installation is used for packaging (§39, "Qt
+deployment dependencies are correctly packaged").
 
 ## Notes and pitfalls
 
