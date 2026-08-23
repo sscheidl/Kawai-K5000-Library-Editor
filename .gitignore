@@ -60,3 +60,7 @@ tmp/
 *.[Ss][Yy][Xx]
 *.[Ii][Mm][Gg]
 !testdata/fixtures/**
+
+# --- Python bytecode ---
+__pycache__/
+*.py[cod]

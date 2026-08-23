@@ -28,6 +28,21 @@ MIDI implementation, the digitalsynth.net analysis of K5000 patch data files,
 Edisyn, KSynthLib / k5ktool, and the historical `KA1toKAA` / `KAAtoKA1` /
 `kaanalyz` tools. No third-party source code is copied into this repository.
 
+## Vendored code
+
+None. No third-party source code is copied into this repository.
+
+- **Catch2** and **Qt** are consumed as external dependencies, not vendored.
+  Catch2 is fetched at configure time; Qt is linked from a system installation.
+- **`prototype/gui/`** is self-contained HTML, CSS and JavaScript supplied by the
+  project owner as the approved interaction reference. It loads no external
+  library, contacts no remote host, and its only script tag points at its own
+  `app.js`. It is not built into any shipped artefact.
+- The K5000 format knowledge was derived from published documentation and from a
+  reproduced `kaanalyz` output listing, then verified against files. The
+  historical utilities' source code was **not** read and none of it is
+  reproduced here. File formats are facts, not expression.
+
 ## Reference material
 
 The Kawai K5000 preset corpus used for golden testing is third-party content —
@@ -36,9 +51,9 @@ partly commercial — held locally and **not redistributed** by this repository.
 
 ## This project's own license
 
-**None, provisionally.** Per [`OPEN_QUESTIONS.md` Q7](OPEN_QUESTIONS.md)
-(2026-08-23, explicitly provisional) the repository stays private and ships no
-`LICENSE` file, so default copyright applies and no redistribution rights are
-granted. This is expected to be revisited before any public release.
+**MIT**, per [`OPEN_QUESTIONS.md` Q7](OPEN_QUESTIONS.md) (2026-08-23). See
+[`../LICENSE`](../LICENSE).
 
-Qt's LGPL obligations above are unaffected by that decision.
+The grant covers this project's source code only. It does not extend to the Qt
+libraries above, which stay under the LGPL, nor to the Kawai preset corpus,
+which is third-party content held outside the repository.

@@ -94,7 +94,10 @@ normalized. Malformed input is reported, never auto-repaired.
 
 ## License
 
-**None, provisionally.** The repository is private and ships no `LICENSE` file,
-so default copyright applies and no redistribution terms are granted. This is an
-explicitly provisional decision — see
-[`docs/OPEN_QUESTIONS.md` Q7](docs/OPEN_QUESTIONS.md).
+**MIT** — see [`LICENSE`](LICENSE). Free for any use, including commercial, as
+long as the copyright notice travels with it.
+
+The licence covers this project's source code only. The Kawai K5000 preset
+material used for testing is third-party content, is never committed, and is not
+redistributed by this repository ([Q2](docs/OPEN_QUESTIONS.md)). Qt is used under
+the LGPL — see [`docs/THIRD_PARTY_NOTICES.md`](docs/THIRD_PARTY_NOTICES.md).

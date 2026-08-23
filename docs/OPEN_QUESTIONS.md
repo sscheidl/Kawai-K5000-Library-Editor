@@ -147,19 +147,24 @@ dependency only and is not linked into the shipped application.
 
 ## Q7 — Repository visibility and license
 
-**DECIDED 2026-08-23 (provisional) — The repository stays private for now and
-ships no `LICENSE` file.**
+**DECIDED 2026-08-23 — The repository is hosted privately on GitHub as
+`Kawai-K5000-Library-Editor` and is licensed **MIT**.**
 
-This decision is **explicitly provisional** and is expected to be revisited
-before any public release. Consequences while it stands:
+This supersedes the earlier provisional decision to ship no `LICENSE` at all.
+The intent recorded with the change is that the project will be freely
+available to everyone, and MIT is the licence that delivers that with the least
+friction: any use, including commercial, in exchange for keeping the copyright
+notice.
 
-- No redistribution terms are granted. Absent a license, default copyright
-  applies and nobody may redistribute or reuse the code.
-- Q2 already forbids committing the corpus, so the data-safety posture does not
-  depend on the repository staying private. Going public later must not require
-  a history rewrite — that constraint is what Q2 protects, and it stays in force.
-- Qt's LGPL obligations are unaffected by this project's own licensing and are
-  recorded in `THIRD_PARTY_NOTICES.md` regardless.
+Consequences:
 
-Revisit trigger: the first time publishing the repository is seriously
-considered, or the first external contributor.
+- Private hosting is an access decision, not a licensing one. The MIT grant is
+  already in place, so making the repository public later needs no licence
+  change and no history rewrite.
+- Q2 stays in force regardless: the preset corpus is third-party, partly
+  commercial, and is never committed. The MIT licence covers this project's
+  source code only, which `LICENSE` states explicitly.
+- Qt remains under the LGPL and is unaffected. See `THIRD_PARTY_NOTICES.md`.
+- The copyright holder is recorded as `sscheidl`, taken from the git
+  configuration. Replace it with a full legal name if the project is ever
+  published or distributed in a context where that matters.
