@@ -6,9 +6,10 @@ manager for the **Kawai K5000S / K5000R**.
 > This is **not** a synthesizer parameter editor. Additive/harmonic editing is
 > explicitly out of scope — see [`docs/MASTER_SPECIFICATION.md`](docs/MASTER_SPECIFICATION.md) §22.
 
-**Status: Phase A (research).** No production format code exists yet, so every
-format sits at implementation level `Unsupported`. The build tree is a validated
-toolchain scaffold; subsystems are added one at a time in the order fixed by
+**Status: reading KA1 and KAA.** The KA1 parser and KAA extraction are
+implemented, read-only, and `GoldenTested` against the private corpus. Writing is
+`Unsupported` for every format and stays that way until each rule behind it is
+verified. Subsystems are added one at a time in the order fixed by
 [decision Q1](docs/OPEN_QUESTIONS.md):
 
 ```

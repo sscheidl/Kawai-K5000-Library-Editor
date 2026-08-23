@@ -8,16 +8,16 @@ Legend: `—` not started · `partial` · `yes` · `n/a`
 
 | Capability | Implemented | Automated test | Golden/reference test | Hardware test | Remaining risk |
 | --- | --- | --- | --- | --- | --- |
-| KA1 import | — | — | — | — | Evidence `Corroborated`; ADD/PCM flag inside the source descriptor still unknown |
-| KA1 export | — | — | — | — | Checksum algorithm unresolved — blocks every write path except byte-exact copy |
-| KAA import | — | — | — | — | Base = min non-zero pointer, validated on 4072 patches; gap contents in fragmented banks unknown |
-| KAA export | — | — | — | — | Whether the instrument requires address-ordered patches is unconfirmed |
-| KAA → KA1 mass export | — | — | — | — | Byte-exactness corroborated on 2195 pairs; needs a golden test to pin it |
+| KA1 import | yes | yes | yes | — | Read-only. Most common-data bytes remain unidentified |
+| KA1 export | — | — | — | — | No serializer. Checksum rule is now known, reserved bytes are not — rename stays blocked |
+| KAA import | yes | yes | yes | — | Base = smallest non-zero pointer, validated by checksum on 4072 patches; gap contents unknown |
+| KAA export | — | — | — | — | No writer. Allocation rule and address-ordering requirement unconfirmed |
+| KAA → KA1 mass export | yes | yes | yes | — | Byte-exact extraction; 2210 payloads reproduce a standalone KA1 exactly |
 | KAA → SYX mass export | — | — | — | — | SysEx framing unknown |
 | KA1/SYX mass import | — | — | — | — | — |
 | Bank A editing | — | — | — | n/a | — |
 | Bank D editing | — | — | — | n/a | — |
-| Bank capacity validation | — | — | — | — | 128 slots + 131072-byte budget known; warning-only until `GoldenTested` (Q3) |
+| Bank capacity validation | partial | yes | — | — | Limits modelled and reported; no export gate exists yet (Q3) |
 | KC1 | — | — | — | — | See OPEN_QUESTIONS Q1 |
 | KCA | — | — | — | — | See OPEN_QUESTIONS Q1 |
 | KCA mass export | — | — | — | — | See OPEN_QUESTIONS Q1 |
@@ -40,7 +40,7 @@ Legend: `—` not started · `partial` · `yes` · `n/a`
 | IMG Extract All | — | — | — | n/a | — |
 | IMG Deep Extract | — | — | — | n/a | — |
 | Workspace persistence | — | — | n/a | n/a | — |
-| Source-file safety | — | — | — | n/a | Must be asserted by test, not by policy |
+| Source-file safety | yes | yes | yes | n/a | Size and mtime of every corpus file re-checked after a full parse run |
 | Hardware KA1 validation | n/a | n/a | n/a | — | — |
 | Hardware KAA validation | n/a | n/a | n/a | — | — |
 | Hardware KCA validation | n/a | n/a | n/a | — | — |

@@ -76,6 +76,54 @@ against the private corpus (963 KA1, 76 KAA). Reproducible with
   tested and all failed. Recorded as a negative result. This blocks every write
   path except byte-exact copy.
 
+### Implemented
+
+- **Read-only KA1 parser** (`src/formats/ka1/`). Strict bounds checking, no
+  silent repair, unknown bytes preserved, structured diagnostics carrying
+  offset plus expected and actual conditions. Validation states: `Valid`,
+  `ChecksumMismatch`, `UnsupportedVariant`, `StructurallyAmbiguous`,
+  `Truncated`, `Malformed`.
+- **KAA bank reader and byte-exact extraction** (`src/formats/kaa/`). Pointers
+  locate patch starts; length comes exclusively from the patch structure.
+- **Core diagnostics and verification model** (`src/core/`).
+- **`k5000cli`** with `formats`, `info` and `extract`. Extraction writes via a
+  temporary file and never overwrites.
+- **38 tests**: synthetic-fixture unit tests that need no corpus, plus
+  corpus-gated golden tests that skip with an explanation when none is set.
+- **`testdata/REFERENCE_MANIFEST.csv`** — anonymous fixture ids, sizes,
+  SHA-256 and expected parse status for all 1039 corpus files. No payloads, no
+  original filenames. Cross-checked against the parser by a golden test.
+- **`docs/CODEX_HANDOFF.md`** — reproducible commands and the specific claims
+  to attack.
+
+### Researched
+
+Phase B, verified against the private corpus and reproducible from
+`tools/research/`:
+
+- **Checksum rule confirmed**:
+  `(sum(common[1..81]) + sum(active source descriptors) + 0xA5) & 0x7F`,
+  **excluding** the ADD wave kits, which carry their own. 937 of 937
+  structurally complete files match; 0 mismatches. This supersedes the earlier
+  negative result, which had not tested the correct scope.
+- **ADD/PCM detection confirmed**: wave kit number at source-relative
+  `+28/+29`, two 7-bit bytes high first, `512` means additive. Agrees with the
+  independent length-derived count in 937 of 938 files; the one contradiction
+  is reported as `StructurallyAmbiguous` rather than resolved by guessing.
+- **KAA pointer mapping confirmed**:
+  `file_offset = 0x0E04 + (pointer - smallest non-zero pointer)`, validated by
+  checking the patch checksum at all 4072 computed offsets across 76 of 76
+  banks. The base is bank-dependent, not constant.
+- **Stale ADD-kit pointers found**: 28 slots carry a wave kit pointer for a
+  source that does not exist, left by a larger patch that previously occupied
+  the slot. Sizing from the pointer table is therefore wrong as well as unsafe
+  — structural sizing reproduces 2210 standalone KA1 files byte for byte
+  against 2195 for pointer-derived sizing.
+
 ### Notes
 
-- No production format code exists yet. Nothing is claimed as supported.
+- Writing remains `Unsupported` for every format, asserted by a unit test.
+  Rename is blocked because the reserved bytes are unknown, not because the
+  checksum is.
+- Nothing is `HardwareVerified`. No generated or extracted file has been loaded
+  on a real K5000S.

@@ -25,17 +25,33 @@ jobs:
         run: bash tools/check-no-corpus-binaries.sh
 
       # OPEN_QUESTIONS Q4: research evidence never raises an implementation
-      # level on its own. Catch the obsolete four-level scale if it reappears.
-      - name: No obsolete verification scale
+      # level on its own. Catch superseded evidence scales if they reappear.
+      - name: No superseded verification scale
         run: |
+          # CHANGELOG.md is excluded on purpose: it records what the scales used
+          # to be, and rewriting history to satisfy a lint would be worse than
+          # the lint.
           if grep -rn --include='*.md' --include='*.h' --include='*.hpp' --include='*.cpp' \
-               -E 'Verified \| Documented \| Observed \| Unknown' . ; then
-            echo "::error::The obsolete four-level confidence scale is back. Use the"
-            echo "::error::research-evidence scale (None/Observed/Documented/Corroborated)"
-            echo "::error::or VerificationLevel. See docs/FORMAT_NOTES.md."
+               --exclude=CHANGELOG.md \
+               -E 'Verified \| Documented \| Observed \| Unknown|None / Observed / Documented / Corroborated' . ; then
+            echo "::error::A superseded evidence scale is back. Use the evidence labels"
+            echo "::error::(Hypothesis / Observed / VerifiedAgainstCorpus / GoldenTested /"
+            echo "::error::HardwareVerified) or VerificationLevel. See docs/FORMAT_NOTES.md."
             exit 1
           fi
           echo "OK"
+
+      # Invariant A must stay enforced by tests, not only by documentation:
+      # patch length never comes from KAA pointers. See docs/FORMAT_NOTES.md.
+      - name: Invariant A regression tests are present
+        run: |
+          count=$(grep -c 'INVARIANT A' tests/unit/test_kaa_bank.cpp || true)
+          if [ "$count" -lt 2 ]; then
+            echo "::error::The Invariant A regression tests are missing from"
+            echo "::error::tests/unit/test_kaa_bank.cpp."
+            exit 1
+          fi
+          echo "OK: $count Invariant A tests"
 
   windows:
     name: Windows x64 (MSVC)
@@ -53,11 +69,8 @@ jobs:
       # Golden tests that need the private corpus skip themselves when
       # K5000_REFERENCE_CORPUS is unset. See docs/TEST_MATRIX.md.
       #
-      # --no-tests=ignore: the suite is legitimately empty during Phase A, and
-      # ctest otherwise exits 8. Remove this flag once the first test lands, so
-      # that an accidentally empty suite fails loudly again.
       - name: Test
-        run: ctest --test-dir build/core-only -C Debug --output-on-failure --no-tests=ignore
+        run: ctest --test-dir build/core-only -C Debug --output-on-failure
 
   format:
     name: clang-format

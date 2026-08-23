@@ -1,0 +1,2 @@
+k5000_add_subdirectory_if_present(ka1)
+k5000_add_subdirectory_if_present(kaa)
