@@ -34,10 +34,12 @@ None. No third-party source code is copied into this repository.
 
 - **Catch2** and **Qt** are consumed as external dependencies, not vendored.
   Catch2 is fetched at configure time; Qt is linked from a system installation.
-- **`prototype/gui/`** is self-contained HTML, CSS and JavaScript supplied by the
-  project owner as the approved interaction reference. It loads no external
-  library, contacts no remote host, and its only script tag points at its own
-  `app.js`. It is not built into any shipped artefact.
+- **`prototype/gui/`** is self-contained HTML, CSS and JavaScript, authored by
+  the project owner with ChatGPT as the assisting tool, and confirmed as such.
+  No third party holds rights in it. It loads no external library, contacts no
+  remote host, and its only script tag points at its own `app.js`. It is
+  interaction and design reference only and is not built into any shipped
+  artefact.
 - The K5000 format knowledge was derived from published documentation and from a
   reproduced `kaanalyz` output listing, then verified against files. The
   historical utilities' source code was **not** read and none of it is
