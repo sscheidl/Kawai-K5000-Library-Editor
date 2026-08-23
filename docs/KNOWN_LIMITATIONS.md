@@ -32,7 +32,11 @@ No parser or serializer exists, so every format sits at implementation level
 `Unsupported` on all three axes (Parsing, Writing, Conversion) — including
 FAT12, whose format is publicly documented but not yet implemented.
 
-Research evidence is tracked separately and is currently `Observed` for KA1 and
-KAA, `Documented` for FAT12, and `None` for everything else. See
+Research evidence is tracked separately and is currently `Corroborated` for the
+KA1/KAA patch payload, the KAA container and the bank capacity model,
+`Observed` for Single SysEx, `Documented` for FAT12, and `None` for everything
+else. Two things block writing even where evidence is strong: the checksum
+algorithm for common-data byte `0x00` is unresolved, and the ADD/PCM flag inside
+the 86-byte source descriptor has not been located. See
 [`FORMAT_NOTES.md`](FORMAT_NOTES.md). Support is never claimed in the UI for
 anything below `GoldenTested`.

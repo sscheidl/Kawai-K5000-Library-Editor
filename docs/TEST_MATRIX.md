@@ -8,16 +8,16 @@ Legend: `—` not started · `partial` · `yes` · `n/a`
 
 | Capability | Implemented | Automated test | Golden/reference test | Hardware test | Remaining risk |
 | --- | --- | --- | --- | --- | --- |
-| KA1 import | — | — | — | — | Research evidence `Observed`; no parser yet |
-| KA1 export | — | — | — | — | Byte preservation on rename unproven |
-| KAA import | — | — | — | — | Pointer base address unknown |
-| KAA export | — | — | — | — | Capacity model unknown |
-| KAA → KA1 mass export | — | — | — | — | Byte-exactness of extraction unproven |
+| KA1 import | — | — | — | — | Evidence `Corroborated`; ADD/PCM flag inside the source descriptor still unknown |
+| KA1 export | — | — | — | — | Checksum algorithm unresolved — blocks every write path except byte-exact copy |
+| KAA import | — | — | — | — | Base = min non-zero pointer, validated on 4072 patches; gap contents in fragmented banks unknown |
+| KAA export | — | — | — | — | Whether the instrument requires address-ordered patches is unconfirmed |
+| KAA → KA1 mass export | — | — | — | — | Byte-exactness corroborated on 2195 pairs; needs a golden test to pin it |
 | KAA → SYX mass export | — | — | — | — | SysEx framing unknown |
 | KA1/SYX mass import | — | — | — | — | — |
 | Bank A editing | — | — | — | n/a | — |
 | Bank D editing | — | — | — | n/a | — |
-| Bank capacity validation | — | — | — | — | See OPEN_QUESTIONS Q3 |
+| Bank capacity validation | — | — | — | — | 128 slots + 131072-byte budget known; warning-only until `GoldenTested` (Q3) |
 | KC1 | — | — | — | — | See OPEN_QUESTIONS Q1 |
 | KCA | — | — | — | — | See OPEN_QUESTIONS Q1 |
 | KCA mass export | — | — | — | — | See OPEN_QUESTIONS Q1 |
