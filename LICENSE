@@ -19,15 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-This license covers the source code of this project only.
-
-It does NOT cover the Kawai K5000 preset material used for testing. That
-material is third-party content, partly commercial, is held locally, is never
-committed to this repository and is not redistributed by it. See
-docs/OPEN_QUESTIONS.md Q2 and testdata/README.md.
-
-Qt is used under the LGPL and is not covered by this license. See
-docs/THIRD_PARTY_NOTICES.md.
