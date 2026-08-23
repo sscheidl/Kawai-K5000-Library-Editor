@@ -1,5 +1,15 @@
 # Codex handoff — KA1 parser and KAA extraction
 
+**Review target:** commit `dd66e53`, branch `main`, repository
+`sscheidl/Kawai-K5000-Library-Editor` (private).
+**Handed over:** 2026-08-23.
+
+**Subsystem ownership while this audit runs:** `src/formats/ka1/`,
+`src/formats/kaa/`, `src/core/` and their tests are frozen. Claude Code will not
+touch them until the audit reports, so that both agents are not reworking the
+same subsystem at once (specification §0). Findings go into a report, not
+directly into the code — Codex reports, Claude Code fixes, Codex re-verifies.
+
 You are the independent reviewer for this phase (specification §41). Nothing
 below is asserted to be correct. Verify it.
 
