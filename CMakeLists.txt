@@ -8,6 +8,7 @@ project(K5000Librarian
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(ProjectOptions)
+include(Dependencies)
 include(CTest)
 
 # ---------------------------------------------------------------------------

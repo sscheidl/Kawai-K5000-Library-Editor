@@ -8,7 +8,7 @@ Legend: `—` not started · `partial` · `yes` · `n/a`
 
 | Capability | Implemented | Automated test | Golden/reference test | Hardware test | Remaining risk |
 | --- | --- | --- | --- | --- | --- |
-| KA1 import | — | — | — | — | Format at *Observed* only |
+| KA1 import | — | — | — | — | Research evidence `Observed`; no parser yet |
 | KA1 export | — | — | — | — | Byte preservation on rename unproven |
 | KAA import | — | — | — | — | Pointer base address unknown |
 | KAA export | — | — | — | — | Capacity model unknown |

@@ -77,7 +77,9 @@ it counts as fixed.
 - Malformed input is reported, never auto-repaired.
 - Output is written atomically: temp file → flush/close → validate → rename.
 - No serializer ships without its parser and a round-trip test (§25).
-- No format is described as supported below *Verified* confidence (§6, §30).
+- No format is described as supported below `GoldenTested` (§6, §30).
+- Research evidence and implementation status are separate. Understanding a
+  field never by itself raises a `VerificationLevel`; only code plus tests do.
 
 ## Code style
 

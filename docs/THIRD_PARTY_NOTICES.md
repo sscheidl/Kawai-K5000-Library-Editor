@@ -18,7 +18,7 @@ DLLs produced by `windeployqt`; Qt sources are not modified.
 | --- | --- | --- | --- |
 | CMake | >= 3.24 | BSD-3-Clause | Build system |
 | MSVC Build Tools 2022 | 17.14 | Microsoft | Compiler toolchain |
-| test framework | pending | pending | See OPEN_QUESTIONS Q6 |
+| Catch2 | v3.7.1 (pinned) | BSL-1.0 | Test framework (OPEN_QUESTIONS Q6). Fetched via CMake `FetchContent`, or used from a local install. Test-only — not linked into the shipped application. |
 
 ## Documentation sources
 
@@ -36,4 +36,9 @@ partly commercial — held locally and **not redistributed** by this repository.
 
 ## This project's own license
 
-Not yet chosen. See [`OPEN_QUESTIONS.md` Q2](OPEN_QUESTIONS.md).
+**None, provisionally.** Per [`OPEN_QUESTIONS.md` Q7](OPEN_QUESTIONS.md)
+(2026-08-23, explicitly provisional) the repository stays private and ships no
+`LICENSE` file, so default copyright applies and no redistribution rights are
+granted. This is expected to be revisited before any public release.
+
+Qt's LGPL obligations above are unaffected by that decision.

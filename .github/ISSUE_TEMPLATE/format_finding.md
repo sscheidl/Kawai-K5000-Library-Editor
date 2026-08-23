@@ -14,9 +14,14 @@ labels: format-research
 - Size:
 - Proposed meaning:
 
-## Confidence
+## Research evidence level
 
-<!-- Verified | Documented | Observed | Unknown -->
+<!-- None | Observed | Documented | Corroborated
+
+     This is what we KNOW, not what the code does. Implementation status is the
+     separate VerificationLevel (Unsupported -> Experimental -> Observed ->
+     GoldenTested -> HardwareVerified) and is only raised by a commit that adds
+     the code and tests backing it. See docs/FORMAT_NOTES.md. -->
 
 ## Evidence
 

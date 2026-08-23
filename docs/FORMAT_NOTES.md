@@ -3,11 +3,29 @@
 Working document for Phase A. Specification §6/§30: never claim support for an
 unverified variant, and never guess undocumented binary fields silently.
 
-## Verification levels
+## Two separate scales
 
-The scale is defined in [`OPEN_QUESTIONS.md` Q4](OPEN_QUESTIONS.md) (decided
-2026-08-23) and is anchored in the core as a `VerificationLevel`, tracked
-**separately for Parsing, Writing and Conversion**:
+Research evidence and implementation status are deliberately **not** the same
+thing, and are never merged into one column. Understanding a field is not the
+same as having shipped a tested parser for it.
+
+### 1. Research evidence — what we know
+
+Applies to this document only. It records how well a structure is understood and
+governs what may legitimately be implemented next.
+
+| Level | Meaning |
+| --- | --- |
+| `None` | Not examined. |
+| `Observed` | Seen consistently across reference files; no documentary confirmation. |
+| `Documented` | Described by a credible source; not yet reproduced against reference files here. |
+| `Corroborated` | Documented **and** reproduced across independent reference files, with sources in agreement or their disagreement recorded. |
+
+### 2. `VerificationLevel` — what the code actually does
+
+Defined in [`OPEN_QUESTIONS.md` Q4](OPEN_QUESTIONS.md) (decided 2026-08-23),
+anchored in the core, tracked **separately for Parsing, Writing and
+Conversion**:
 
 ```
 Unsupported → Experimental → Observed → GoldenTested → HardwareVerified
@@ -15,9 +33,9 @@ Unsupported → Experimental → Observed → GoldenTested → HardwareVerified
 
 | Level | Meaning |
 | --- | --- |
-| `Unsupported` | Not implemented, or understood too poorly to act on. No semantic claim; bytes are preserved verbatim. |
-| `Experimental` | Implemented from a documented source; not yet reproduced against reference files. Writing off by default. |
-| `Observed` | Reproduced consistently across reference files, no documentary confirmation yet. |
+| `Unsupported` | Not implemented. No semantic claim; bytes are preserved verbatim. |
+| `Experimental` | Implemented, not yet reproduced against reference files. Writing off by default. |
+| `Observed` | Implemented and reproduced consistently across reference files. |
 | `GoldenTested` | Round-trip and golden-file tests pass against the reference corpus. |
 | `HardwareVerified` | Confirmed on the real K5000S / Gotek and logged in `HARDWARE_ACCEPTANCE.md`. |
 
@@ -26,27 +44,38 @@ is capped by the weaker of its two endpoints. Write paths below `GoldenTested`
 are disabled unless the user explicitly enables them, and every such export is
 logged with its level.
 
-This document is the evidence record behind those levels. Raising a level here
-without the corresponding test is exactly the kind of unbacked claim §41 tells
-the reviewing agent not to trust.
+**Because no parser exists yet, every implementation level below is
+`Unsupported`, regardless of how much research evidence has accumulated.** A
+level is raised in the same commit that adds the code and tests backing it,
+never in advance.
 
 ## Per-format status
 
-| Format | V1 scope | Parsing | Writing | Conversion | Notes |
+| Format | V1 scope | Research evidence | Parsing | Writing | Conversion |
 | --- | --- | --- | --- | --- | --- |
-| KA1 (single) | required | `Observed` | `Unsupported` | `Unsupported` | Header block + 8-char name located; body layout open |
-| KAA (single bank) | required | `Observed` | `Unsupported` | `Unsupported` | 4-byte big-endian pointer table located; base address unknown |
-| Single SysEx | required | `Unsupported` | `Unsupported` | `Unsupported` | Framing not yet examined |
-| Bank SysEx | only if verifiable | `Unsupported` | `Unsupported` | `Unsupported` | May be dropped from V1 |
-| KC1 (multi) | required, after Single/IMG core | `Unsupported` | `Unsupported` | `Unsupported` | Not yet examined (Q1) |
-| KCA (multi bank) | required, after Single/IMG core | `Unsupported` | `Unsupported` | `Unsupported` | Not yet examined (Q1) |
-| Multi SysEx | only if verifiable | `Unsupported` | `Unsupported` | `Unsupported` | May be dropped from V1 |
-| KRA (arpeggio) | pass-through only | `Unsupported` | `Unsupported` | n/a | Stored in images byte-exact, never parsed in V1 |
-| FAT12 / 1.44 MB IMG | required | `Experimental` | `Unsupported` | n/a | Publicly specified format; nothing implemented yet |
+| KA1 (single) | required | `Observed` | `Unsupported` | `Unsupported` | `Unsupported` |
+| KAA (single bank) | required | `Observed` | `Unsupported` | `Unsupported` | `Unsupported` |
+| Single SysEx | required | `None` | `Unsupported` | `Unsupported` | `Unsupported` |
+| Bank SysEx | only if verifiable | `None` | `Unsupported` | `Unsupported` | `Unsupported` |
+| KC1 (multi) | required, after Single/IMG core | `None` | `Unsupported` | `Unsupported` | `Unsupported` |
+| KCA (multi bank) | required, after Single/IMG core | `None` | `Unsupported` | `Unsupported` | `Unsupported` |
+| Multi SysEx | only if verifiable | `None` | `Unsupported` | `Unsupported` | `Unsupported` |
+| KRA (arpeggio) | pass-through only | `None` | `Unsupported` | `Unsupported` | n/a |
+| FAT12 / 1.44 MB IMG | required | `Documented` | `Unsupported` | `Unsupported` | n/a |
 
-Bank capacity is tracked on the same scale, currently `Unsupported`. Per
-[Q3](OPEN_QUESTIONS.md), it produces warnings rather than a hard export gate
-until it reaches `GoldenTested`.
+Notes per row:
+
+- **KA1** — header block and 8-char name located; body layout open.
+- **KAA** — 4-byte big-endian pointer table located; base address unknown.
+- **Single SysEx / Bank SysEx / Multi SysEx** — framing not yet examined; the
+  bank and multi variants may be dropped from V1 if they cannot be verified.
+- **KC1 / KCA** — not yet examined; sequenced after the Single/IMG core (Q1).
+- **KRA** — stored in images byte-exact, never parsed in V1.
+- **FAT12** — publicly specified; nothing implemented yet.
+
+Bank capacity is tracked the same way: research evidence `None`, implementation
+`Unsupported`. Per [Q3](OPEN_QUESTIONS.md) it produces warnings rather than a
+hard export gate until it reaches `GoldenTested`.
 
 ## Sources
 
@@ -84,13 +113,13 @@ early validation.
 
 ## KA1 — single preset
 
-**Parsing: `Observed`.** First evidence pass over `Africa.KA1` (1866 B),
+**Research evidence: `Observed`. Implementation: `Unsupported`.** First evidence pass over `Africa.KA1` (1866 B),
 `CybaBars.KA1` (1060 B), `BassTalk.KA1` (1952 B), `BellWing.KA1` (1952 B),
 `Century.KA1` (1866 B), `Choruz.KA1` (1866 B).
 
 ### Established
 
-| Offset | Size | Field | Confidence | Evidence |
+| Offset | Size | Field | Evidence level | Evidence |
 | --- | --- | --- | --- | --- |
 | `0x28` | 8 | Preset name, ASCII, space-padded | Observed | `"Africa  "`, `"CybaBars"`, `"BassTalk"` at the same offset in every sample |
 
@@ -119,7 +148,7 @@ early validation.
 
 ## KAA — single bank
 
-**Parsing: `Observed`.** Evidence: `ABANKINT.KAA` and `lead3.kaa`, plus the size
+**Research evidence: `Observed`. Implementation: `Unsupported`.** Evidence: `ABANKINT.KAA` and `lead3.kaa`, plus the size
 census over all 76 reference banks.
 
 ### Established
@@ -163,18 +192,18 @@ census over all 76 reference banks.
 
 ## Single SysEx
 
-**Parsing: `Unsupported`.** Not yet examined. Must establish manufacturer ID, model ID,
+**Research evidence: `None`. Implementation: `Unsupported`.** Not yet examined. Must establish manufacturer ID, model ID,
 message framing, length encoding, bank/slot metadata and checksum before any
 claim of support (specification §30).
 
 ## KC1 / KCA — multi
 
-**Parsing: `Unsupported`.** Not yet examined. Scope decision pending — see
+**Research evidence: `None`. Implementation: `Unsupported`.** Not yet examined. Scope decision pending — see
 [`OPEN_QUESTIONS.md`](OPEN_QUESTIONS.md).
 
 ## FAT12 / 1.44 MB IMG
 
-**Parsing: `Experimental`.** Standard IBM-PC 1.44 MB layout: 512-byte sectors, 2 heads,
+**Research evidence: `Documented`. Implementation: `Unsupported`.** Standard IBM-PC 1.44 MB layout: 512-byte sectors, 2 heads,
 80 cylinders, 18 sectors/track, 2 FAT copies, 224 root directory entries,
 1 sector/cluster. Total 2880 sectors = 1 474 560 bytes, matching every reference
 image exactly.

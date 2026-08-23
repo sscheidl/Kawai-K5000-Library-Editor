@@ -6,9 +6,15 @@ manager for the **Kawai K5000S / K5000R**.
 > This is **not** a synthesizer parameter editor. Additive/harmonic editing is
 > explicitly out of scope — see [`docs/MASTER_SPECIFICATION.md`](docs/MASTER_SPECIFICATION.md) §22.
 
-**Status: Phase A (research).** No production format code exists yet. The build
-tree is a validated toolchain scaffold; subsystems are added one at a time in the
-order given by the specification (§40).
+**Status: Phase A (research).** No production format code exists yet, so every
+format sits at implementation level `Unsupported`. The build tree is a validated
+toolchain scaffold; subsystems are added one at a time in the order fixed by
+[decision Q1](docs/OPEN_QUESTIONS.md):
+
+```
+KA1 → KAA → Bank A/D workspace → Single SysEx → FAT12 → IMG → Deep Extract
+→ KC1 → KCA → Multi workspace/references → integration → hardening
+```
 
 ## What it will do (Version 1)
 
@@ -87,5 +93,7 @@ normalized. Malformed input is reported, never auto-repaired.
 
 ## License
 
-Not yet chosen — see [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md). Until a
-`LICENSE` file exists, no redistribution terms are granted.
+**None, provisionally.** The repository is private and ships no `LICENSE` file,
+so default copyright applies and no redistribution terms are granted. This is an
+explicitly provisional decision — see
+[`docs/OPEN_QUESTIONS.md` Q7](docs/OPEN_QUESTIONS.md).

@@ -107,46 +107,59 @@ Rules:
 
 ## Q5 — Prototype contradicts the specification on Bank A/D layout
 
-**Status: open. Blocks completion of `UI_SPEC.md`.**
+**DECIDED 2026-08-23 — The specification wins. Bank A and Bank D are shown
+simultaneously from 1920 px; below that, and at Detailed card density, the view
+falls back to a switchable single-bank workspace. Multi remains its own top-level
+navigation destination.**
 
-Specification §2 requires: *"left: Library / imported presets, center: Bank A and
-Bank D, right: Inspector"* and *"Bank A and Bank D should be visible
-simultaneously at a normal 1920×1080 desktop resolution."*
+Background: specification §2 requires *"left: Library / imported presets, center:
+Bank A and Bank D, right: Inspector"* with both banks visible at 1920×1080. The
+approved prototype v3 (`prototype/gui/GUI_HANDOFF.md`) instead described a single
+central workspace switching between Bank A / Bank D / Multi. The prototype's
+switch is retained as the narrow-viewport and high-density fallback rather than
+as the primary model.
 
-The approved prototype v3 (`prototype/gui/GUI_HANDOFF.md`) instead describes *"a
-single central workspace with switch: Bank A / Bank D / Multi"* — one bank visible
-at a time.
+Multi is **not** a third tab of the bank workspace — §2 lists `Multis` as its own
+section of the main navigation.
 
-These cannot both hold.
-
-**Recommendation.** The specification wins, with the prototype's switch retained
-as a fallback: A and D side by side by default at >= 1920 px, falling back to the
-switched single-workspace view at narrower widths or at Detailed card density.
-Multi stays its own destination in the main navigation, since §2 lists it as a
-separate section rather than a third tab of the bank workspace.
-
-**Decision:** _pending_
+Consequence: [`UI_SPEC.md`](UI_SPEC.md) is unblocked.
 
 ---
 
 ## Q6 — Test framework
 
-**Status: open.** Golden-file and binary round-trip testing is the dominant use
-case.
+**DECIDED 2026-08-23 — Catch2 v3 via CMake `FetchContent`, pinned to a fixed
+release tag.**
 
-**Recommendation.** Catch2 v3 via CMake `FetchContent`, pinned to a release tag.
-Good binary comparison and data-driven cases, no runtime dependency in the
-shipped application. GoogleTest is the equally defensible alternative. Either way
-it is recorded in `THIRD_PARTY_NOTICES.md`.
+Pinned to **v3.7.1**. Changing the pin is a deliberate, committed change, never
+a floating branch — golden tests must not shift underneath a release because a
+dependency moved.
 
-**Decision:** _pending_
+`FetchContent` is declared with `FIND_PACKAGE_ARGS`, so a Catch2 already
+installed on the machine is used instead of a download. `K5000_FETCH_CATCH2=OFF`
+disables the download path entirely for offline builds; tests are then skipped
+with an explanatory message rather than failing configuration.
+
+Recorded in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). Catch2 is a test
+dependency only and is not linked into the shipped application.
 
 ---
 
 ## Q7 — Repository visibility and license
 
-**Status: open.** Q2 is satisfied either way, but the license choice depends on
-whether this becomes a public repository. No `LICENSE` file exists yet, so no
-redistribution terms are currently granted.
+**DECIDED 2026-08-23 (provisional) — The repository stays private for now and
+ships no `LICENSE` file.**
 
-**Decision:** _pending_
+This decision is **explicitly provisional** and is expected to be revisited
+before any public release. Consequences while it stands:
+
+- No redistribution terms are granted. Absent a license, default copyright
+  applies and nobody may redistribute or reuse the code.
+- Q2 already forbids committing the corpus, so the data-safety posture does not
+  depend on the repository staying private. Going public later must not require
+  a history rewrite — that constraint is what Q2 protects, and it stays in force.
+- Qt's LGPL obligations are unaffected by this project's own licensing and are
+  recorded in `THIRD_PARTY_NOTICES.md` regardless.
+
+Revisit trigger: the first time publishing the repository is seriously
+considered, or the first external contributor.

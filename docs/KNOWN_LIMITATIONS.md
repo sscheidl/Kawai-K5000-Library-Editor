@@ -28,6 +28,11 @@ skipped by default. See [`TOOLCHAIN.md`](TOOLCHAIN.md).
 
 ## Formats
 
-Every format except FAT12 is below *Verified* confidence. See
-[`FORMAT_NOTES.md`](FORMAT_NOTES.md). Support will not be claimed in the UI for
-anything that has not been verified and tested.
+No parser or serializer exists, so every format sits at implementation level
+`Unsupported` on all three axes (Parsing, Writing, Conversion) — including
+FAT12, whose format is publicly documented but not yet implemented.
+
+Research evidence is tracked separately and is currently `Observed` for KA1 and
+KAA, `Documented` for FAT12, and `None` for everything else. See
+[`FORMAT_NOTES.md`](FORMAT_NOTES.md). Support is never claimed in the UI for
+anything below `GoldenTested`.

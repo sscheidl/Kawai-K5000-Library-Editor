@@ -11,6 +11,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  guards:
+    name: Repository guards
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # OPEN_QUESTIONS Q2: the private reference corpus must never be committed.
+      # .gitignore does not apply to already-tracked files, so this checks the
+      # index itself.
+      - name: No tracked K5000 binaries outside testdata/fixtures
+        run: bash tools/check-no-corpus-binaries.sh
+
+      # OPEN_QUESTIONS Q4: research evidence never raises an implementation
+      # level on its own. Catch the obsolete four-level scale if it reappears.
+      - name: No obsolete verification scale
+        run: |
+          if grep -rn --include='*.md' --include='*.h' --include='*.hpp' --include='*.cpp' \
+               -E 'Verified \| Documented \| Observed \| Unknown' . ; then
+            echo "::error::The obsolete four-level confidence scale is back. Use the"
+            echo "::error::research-evidence scale (None/Observed/Documented/Corroborated)"
+            echo "::error::or VerificationLevel. See docs/FORMAT_NOTES.md."
+            exit 1
+          fi
+          echo "OK"
+
   windows:
     name: Windows x64 (MSVC)
     runs-on: windows-2022
@@ -24,10 +50,14 @@ jobs:
       - name: Build
         run: cmake --build build/core-only --config Debug
 
+      # Golden tests that need the private corpus skip themselves when
+      # K5000_REFERENCE_CORPUS is unset. See docs/TEST_MATRIX.md.
+      #
+      # --no-tests=ignore: the suite is legitimately empty during Phase A, and
+      # ctest otherwise exits 8. Remove this flag once the first test lands, so
+      # that an accidentally empty suite fails loudly again.
       - name: Test
-        run: ctest --test-dir build/core-only -C Debug --output-on-failure
-        # Golden tests that need the external reference corpus skip themselves
-        # when K5000_REFERENCE_CORPUS is unset. See docs/TEST_MATRIX.md.
+        run: ctest --test-dir build/core-only -C Debug --output-on-failure --no-tests=ignore
 
   format:
     name: clang-format
