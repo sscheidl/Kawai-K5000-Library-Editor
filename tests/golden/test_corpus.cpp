@@ -39,6 +39,11 @@ struct Corpus {
     std::vector<CorpusFile> kaa;
     bool configured = false;
     std::string reason;
+
+    /// Files that matched by extension but could not be opened. A corpus test
+    /// that quietly reads fewer files than it was given proves less than it
+    /// claims, and says nothing about the difference.
+    std::vector<std::string> unreadable;
 };
 
 std::string lowerExtension(const std::filesystem::path& path) {
@@ -78,6 +83,10 @@ const Corpus& corpus() {
             }
             std::ifstream stream(it->path(), std::ios::binary);
             if (!stream) {
+                // Do not skip in silence. On Windows the usual cause is a path
+                // longer than MAX_PATH, which drops real reference files out of
+                // the evidence base while every test still reports green.
+                result.unreadable.push_back(it->path().string());
                 continue;
             }
             CorpusFile file;
@@ -106,6 +115,24 @@ std::string rawNameKey(const ka1::Single& single) {
 }
 
 } // namespace
+
+TEST_CASE("corpus: every file the corpus offers is actually read", "[golden][safety]") {
+    const Corpus& c = corpus();
+    if (!c.configured) {
+        SKIP(c.reason);
+    }
+
+    // Every other golden test draws its authority from "it holds across the
+    // whole corpus". That is only worth something if the whole corpus was read.
+    // Audit 2026-09-12: four commercial banks sat behind paths longer than
+    // MAX_PATH, were dropped without a word, and the suite stayed green.
+    INFO("KA1 read: " << c.ka1.size() << "  KAA read: " << c.kaa.size()
+                      << "  unreadable: " << c.unreadable.size());
+    for (const std::string& path : c.unreadable) {
+        WARN("corpus file could not be opened: " << path);
+    }
+    CHECK(c.unreadable.empty());
+}
 
 TEST_CASE("corpus: every structurally valid KA1 satisfies the checksum rule",
           "[golden][ka1][checksum]") {
@@ -322,6 +349,15 @@ TEST_CASE("corpus: extracted patches are byte-identical to standalone KA1 files"
     // Extraction reproduces standalone files exactly. Same-name-same-size pairs
     // that differ are independent edits sharing a name, not extraction errors.
     CHECK(identical > 0);
+
+    // Pin the documented figure whenever this is the corpus it was measured on
+    // (963 KA1 + 76 KAA, surveyed 2026-08-23). `identical > 0` alone was
+    // decoration: an audit mutation that welded padding onto payloads across
+    // the whole corpus still left 2184 matches and the test passed.
+    if (c.ka1.size() == 963 && c.kaa.size() == 76) {
+        CHECK(identical == 2210);
+        CHECK(differing == 197);
+    }
 }
 
 TEST_CASE("corpus: fragmented banks do not leak padding into payloads",
@@ -367,7 +403,16 @@ TEST_CASE("corpus: fragmented banks do not leak padding into payloads",
     INFO("fragmented banks in the corpus: " << fragmentedBanks);
     // Fragmentation is expected to exist; the point is that it changed nothing
     // about the extracted payloads, which the checks above already asserted.
-    CHECK(fragmentedBanks >= 0);
+    //
+    // But those checks only mean something while the corpus still contains a
+    // gap to fall into. `fragmentedBanks >= 0` was a tautology, and it hid the
+    // sharpest signal there is: sizing patches from the pointer delta makes
+    // every span exactly adjacent, so the count drops to 0 and the overlap
+    // check above can never fire again. 8 banks in the 2026-08-23 corpus.
+    CHECK(fragmentedBanks >= 1);
+    if (c.kaa.size() == 76) {
+        CHECK(fragmentedBanks == 8);
+    }
 }
 
 TEST_CASE("corpus: parse results match the independently generated manifest",

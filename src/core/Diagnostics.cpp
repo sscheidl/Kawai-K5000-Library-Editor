@@ -48,6 +48,8 @@ std::string_view toString(DiagnosticCode code) noexcept {
     case DiagnosticCode::BankStaleAddKitPointer:
         return "ADD wave kit pointer set beyond the source count (stale)";
     case DiagnosticCode::BankSlotUnreadable: return "slot could not be read";
+    case DiagnosticCode::BankBaseAddressSuspect:
+        return "every occupied slot failed its checksum - the derived base address is suspect";
     }
     return "unknown diagnostic";
 }

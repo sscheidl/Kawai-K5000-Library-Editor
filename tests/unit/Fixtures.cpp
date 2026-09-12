@@ -92,7 +92,8 @@ BuiltBank makeBank(const std::vector<BankEntry>& entries, std::uint32_t baseAddr
         // Dead space before the patch. A parser that sizes a patch by the
         // distance to the next pointer will swallow this.
         for (std::size_t i = 0; i < entry.gapBefore; ++i) {
-            built.bytes[cursor + i] = 0x7F;
+            built.bytes[cursor + i] =
+                entry.gapFill.size() == entry.gapBefore ? entry.gapFill[i] : 0x7F;
         }
         cursor += entry.gapBefore;
 

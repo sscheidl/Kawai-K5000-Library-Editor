@@ -136,6 +136,67 @@ TEST_CASE("INVARIANT A: a stale ADD-kit pointer does not lengthen the patch", "[
     CHECK(extraction.patches[0].payload().size() != 254 + ka1::kAddWaveKitSize);
 }
 
+TEST_CASE("a bank whose every slot fails its checksum reports the base, not the slots",
+          "[kaa][malformed]") {
+    // The base address is derived, not read: it is the lowest address any
+    // pointer still names. Delete the patches that sat at the start of the data
+    // region and that assumption breaks - the derived base is now too high, and
+    // every slot in the bank reads bytes belonging to something else.
+    //
+    // Here the two deleted patches are still physically present (deletion only
+    // clears the pointer table), so every slot parses cleanly and only the
+    // checksum objects. Reported per slot, that reads as two damaged patches.
+    // It is one damaged assumption, and the bank-level diagnostic says so.
+    auto ghost = test::makeSingle("Deleted ", {pcm, pcm});
+    REQUIRE(ghost.size() == 254);
+    ghost[ka1::kChecksumOffset] = static_cast<std::uint8_t>((ghost[ka1::kChecksumOffset] + 5) & 0x7F);
+
+    std::vector<std::uint8_t> dead;
+    dead.insert(dead.end(), ghost.begin(), ghost.end());
+    dead.insert(dead.end(), ghost.begin(), ghost.end());
+
+    const auto a = test::makeSingle("Live A  ", {pcm, pcm});
+    const auto b = test::makeSingle("Live B  ", {pcm, pcm});
+    const auto built = test::makeBank({{0, a, dead.size(), dead}, {1, b, 0, {}}});
+
+    const auto parsed = kaa::parseBank(built.bytes);
+    REQUIRE(parsed.usable);
+
+    const auto extraction = kaa::extractAll(parsed.bank, built.bytes);
+    REQUIRE(extraction.patches.size() == 2);
+    for (const auto& patch : extraction.patches) {
+        CHECK_FALSE(patch.single.checksumMatches());
+    }
+
+    CHECK(extraction.baseAddressSuspect);
+    bool reported = false;
+    for (const auto& d : extraction.diagnostics) {
+        reported = reported || d.code == DiagnosticCode::BankBaseAddressSuspect;
+    }
+    CHECK(reported);
+    CHECK(extraction.validationState == ValidationState::Malformed);
+}
+
+TEST_CASE("one bad patch is not blamed on the base address", "[kaa][malformed]") {
+    // The counterpart to the test above. A single mismatching patch among
+    // healthy ones is a damaged patch, and calling that a base-address failure
+    // would trade a precise report for a dramatic one.
+    const auto good = test::makeSingle("Good    ", {pcm, pcm});
+    auto bad = test::makeSingle("Bad     ", {pcm, pcm});
+    bad[ka1::kChecksumOffset] = static_cast<std::uint8_t>((bad[ka1::kChecksumOffset] + 1) & 0x7F);
+
+    const auto built = test::makeBank({{0, good, 0, {}}, {1, bad, 0, {}}});
+    const auto parsed = kaa::parseBank(built.bytes);
+    REQUIRE(parsed.usable);
+
+    const auto extraction = kaa::extractAll(parsed.bank, built.bytes);
+    REQUIRE(extraction.patches.size() == 2);
+    CHECK_FALSE(extraction.baseAddressSuspect);
+    for (const auto& d : extraction.diagnostics) {
+        CHECK(d.code != DiagnosticCode::BankBaseAddressSuspect);
+    }
+}
+
 TEST_CASE("extraction is byte preservation", "[kaa][preservation]") {
     // Deliberately imperfect input: the stored checksum is wrong. Extraction
     // must hand back exactly those bytes, wrong checksum included.

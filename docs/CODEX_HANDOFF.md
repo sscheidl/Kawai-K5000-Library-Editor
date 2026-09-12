@@ -1,8 +1,25 @@
 # Codex handoff — KA1 parser and KAA extraction
 
+> [!IMPORTANT]
+> **CLOSED 2026-09-12. The freeze is lifted.** The commissioned Codex review
+> never reported. Rather than leave `src/formats/ka1/`, `src/formats/kaa/` and
+> `src/core/` locked indefinitely — blocking the Bank A/D workspace and the rest
+> of the roadmap behind an audit that was not coming — the review below was
+> carried out by Claude Code and the findings fixed.
+>
+> Result: **[`AUDIT_2026-09-12.md`](AUDIT_2026-09-12.md)**. Every claim in this
+> document was re-derived from the corpus and holds. Six defects were confirmed
+> and five fixed, two of them P1; the sixth is documented at its site. All are in
+> the test harness and the file-writing path, none in the format rules.
+>
+> The audit's own limitation is recorded in it: the same author reviewed the same
+> work. An independent review of this subsystem is still welcome and is *not*
+> considered discharged. What is discharged is the freeze — the subsystem is open
+> for normal work again. This document is kept as the record of what was asked.
+
 **Review target:** commit `dd66e53`, branch `main`, repository
 `sscheidl/Kawai-K5000-Library-Editor` (private).
-**Handed over:** 2026-08-23.
+**Handed over:** 2026-08-23. **Closed:** 2026-09-12.
 
 **Subsystem ownership while this audit runs:** `src/formats/ka1/`,
 `src/formats/kaa/`, `src/core/` and their tests are frozen. Claude Code will not
@@ -168,6 +185,21 @@ They are already recorded in `docs/FORMAT_NOTES.md`:
 - Whether the instrument requires address-ordered patches in a bank is unknown.
 - Single SysEx is a hypothesis only. KC1/KCA untouched.
 - Nothing is hardware-verified.
+
+## Outcome of each claim
+
+Recorded here so this document is not read in isolation as an open question.
+Detail and figures in [`AUDIT_2026-09-12.md`](AUDIT_2026-09-12.md).
+
+| Claim | Outcome |
+| --- | --- |
+| 1 — checksum rule and scope | Confirmed. 937/937; including kits drops it to 133, so the scope is discriminated, not assumed. `computeChecksum` returning 0 was real but unreachable — fixed regardless (F3). |
+| 2 — ADD/PCM classification | Confirmed. No byte at `+29` has bit 7 set anywhere in the corpus; the ambiguous file is exactly one. |
+| 3 — structural length, Invariant A | Confirmed. Both `[invariant]` tests verified by mutation — they fail. Two *other* golden tests did not (F4). |
+| 4 — KAA pointer mapping | Confirmed. Including kit pointers changes the base on 0 of 76 banks. The base remains a heuristic; a wrong one is now reported at bank level (F5). |
+| 5 — bounds safety | Confirmed. Fuzz and truncation tests added; they did not exist. |
+| 6 — source-file safety | Confirmed for the corpus and for overwrite refusal. The write itself was unverified before rename (F2). |
+| 7 — verification honesty | Confirmed. The manifest cross-check is not circular. |
 
 ## Classification
 

@@ -11,6 +11,7 @@
 #include "k5000/ka1/Single.h"
 
 #include <cstdint>
+#include <optional>
 #include <span>
 
 namespace k5000::ka1 {
@@ -20,12 +21,18 @@ namespace k5000::ka1 {
 ///
 /// The ADD wave kits are excluded; each carries its own checksum in its first
 /// byte. Verified against 937 of 937 structurally valid corpus files.
-/// `payload` must hold at least `patchSize(sources, 0)` bytes.
-[[nodiscard]] std::uint8_t computeChecksum(std::span<const std::uint8_t> payload, int sources);
+///
+/// Returns nullopt when `payload` holds fewer than `patchSize(sources, 0)`
+/// bytes, or when `sources` is outside 1..6. It must not return a number in
+/// that case: 0x00 is a perfectly legal checksum, so a fabricated one is
+/// indistinguishable from a computed one at the call site.
+[[nodiscard]] std::optional<std::uint8_t> computeChecksum(std::span<const std::uint8_t> payload,
+                                                          int sources);
 
 /// Checksum of one ADD wave kit: (sum(kit[1:]) + 0xA5) & 0x7F.
-/// `kit` must be exactly kAddWaveKitSize bytes.
-[[nodiscard]] std::uint8_t computeAddWaveKitChecksum(std::span<const std::uint8_t> kit);
+/// Returns nullopt unless `kit` is exactly kAddWaveKitSize bytes.
+[[nodiscard]] std::optional<std::uint8_t> computeAddWaveKitChecksum(
+    std::span<const std::uint8_t> kit);
 
 struct ParseOptions {
     /// A standalone .KA1 file must end exactly where its structure ends;

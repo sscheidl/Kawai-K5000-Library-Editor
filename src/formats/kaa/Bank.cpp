@@ -112,8 +112,8 @@ BankResult parseBank(std::span<const std::uint8_t> bytes) {
         }
 
         // The base is the smallest non-zero pointer anywhere in the table,
-        // including ADD-kit pointers - a stale kit pointer can still be the
-        // lowest address the bank ever used.
+        // including ADD-kit pointers. See the note in Bank.h: on the corpus
+        // this is indistinguishable from scanning patch pointers alone.
         if (slot.patchPointer != 0) {
             base = std::min(base, slot.patchPointer);
             anyPointer = true;
@@ -259,6 +259,23 @@ ExtractionResult extractAll(const Bank& bank, std::span<const std::uint8_t> byte
         } else {
             result.failedSlots.push_back(slotIndex);
         }
+    }
+
+    // A wrong base address does not corrupt one patch, it shifts every offset
+    // in the bank. Each slot then reports its own checksum mismatch and the
+    // shared cause stays invisible. One bank-level diagnostic says it plainly.
+    // Requires at least two slots: a single mismatching patch is just a
+    // damaged patch, and calling that a base-address failure would be a guess.
+    const int examined = static_cast<int>(result.patches.size());
+    const int mismatching = static_cast<int>(
+        std::count_if(result.patches.begin(), result.patches.end(),
+                      [](const ExtractedPatch& p) { return !p.single.checksumMatches(); }));
+    if (examined >= 2 && mismatching == examined) {
+        result.baseAddressSuspect = true;
+        sink.add(makeDiagnostic(DiagnosticCode::BankBaseAddressSuspect, ValidationState::Malformed,
+                                std::nullopt, 0, mismatching,
+                                "all " + std::to_string(examined)
+                                    + " readable slots failed their checksum"));
     }
 
     result.diagnostics = sink.entries();

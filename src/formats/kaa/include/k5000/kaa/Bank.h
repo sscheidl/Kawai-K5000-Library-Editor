@@ -16,6 +16,19 @@
 // Validated by parsing the patch at every computed offset and checking its
 // Kawai checksum: 4072 of 4072 pass. A wrong base would destroy every one.
 //
+// The base is taken over the whole table, ADD-kit pointers included. The audit
+// of 2026-09-12 measured what that buys: on all 76 corpus banks the result is
+// identical to the minimum over patch pointers alone. It cannot be otherwise
+// for a live slot, whose kit pointers address bytes inside its own patch and so
+// always exceed its patch pointer. Only a stale kit pointer from a freed lower
+// region could move the base at all, and it would move it the wrong way. The
+// scan is kept as written because narrowing it is equally unproven - but a
+// wrong base is no longer silent: see BankBaseAddressSuspect.
+//
+// The base is a heuristic, not a constant read from the file. It assumes the
+// lowest address still referenced is where the data region begins. Deleting the
+// first-allocated patch would break that assumption. No corpus bank does.
+//
 // INVARIANT A. Pointers locate patch STARTS. They must never determine patch
 // LENGTH, in either of these two forms:
 //
@@ -112,6 +125,12 @@ struct ExtractionResult {
 
     /// Slots that are occupied but could not be read. Never silently dropped.
     std::vector<int> failedSlots;
+
+    /// Set when every occupied slot failed its patch checksum. Individually
+    /// those look like 128 damaged patches; together they are one damaged
+    /// assumption - almost certainly the derived base address. Reported at bank
+    /// level so the real cause is not buried under per-slot noise.
+    bool baseAddressSuspect = false;
 };
 
 /// Extract one occupied slot.

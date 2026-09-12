@@ -51,7 +51,8 @@ enum class DiagnosticCode {
     BankPointerOutsideDataRegion,
     BankPatchExceedsDataRegion,
     BankStaleAddKitPointer,
-    BankSlotUnreadable
+    BankSlotUnreadable,
+    BankBaseAddressSuspect
 };
 
 std::string_view toString(DiagnosticCode code) noexcept;

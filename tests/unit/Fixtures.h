@@ -37,6 +37,11 @@ struct BankEntry {
     /// Bytes of dead space to leave *before* this patch. This is what makes a
     /// bank fragmented, and it is the whole point of the Invariant A test.
     std::size_t gapBefore = 0;
+    /// What to put in that dead space. Empty means 0x7F filler. Supplying the
+    /// bytes of deleted patches models a region whose start is no longer
+    /// referenced by any pointer - the case that makes the derived base wrong.
+    /// Must be exactly `gapBefore` bytes when given.
+    std::vector<std::uint8_t> gapFill;
 };
 
 struct BuiltBank {

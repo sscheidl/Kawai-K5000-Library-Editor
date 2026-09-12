@@ -3,6 +3,15 @@
 Specification §6/§30: never claim support for an unverified variant, and never
 guess undocumented binary fields silently.
 
+> Every figure in this document was re-derived from the corpus on 2026-09-12 by
+> an implementation written independently of both the C++ parser and
+> `tools/research/`, and all of them reproduced exactly. See
+> [`AUDIT_2026-09-12.md`](AUDIT_2026-09-12.md). One clarification worth carrying
+> here: out-of-range wave kit values are not unique to the single ambiguous
+> file — there are 12 occurrences across 11 files. The other 11 are already
+> `Malformed` on length grounds and so fall outside the 938 files analysed
+> below, which is why the counts here are unaffected.
+
 ## Two separate scales
 
 Research evidence and implementation status are deliberately **not** the same

@@ -154,6 +154,10 @@ int commandExtract(const std::filesystem::path& path, const std::vector<std::uin
         std::snprintf(prefix, sizeof(prefix), "A%03d_", patch.slot + 1);
         const auto target = outDir / (prefix + sanitize(patch.single.trimmedName()) + ".KA1");
 
+        // Known gap, accepted for a diagnostic tool: another process could
+        // create `target` between this check and the rename below, and
+        // std::filesystem::rename replaces an existing file. Closing that race
+        // needs an exclusive-create rename, which is platform-specific.
         if (std::filesystem::exists(target)) {
             std::cerr << "  refusing to overwrite " << target.filename().string() << '\n';
             ++skipped;
@@ -167,9 +171,27 @@ int commandExtract(const std::filesystem::path& path, const std::vector<std::uin
             const auto& payload = patch.payload();
             out.write(reinterpret_cast<const char*>(payload.data()),
                       static_cast<std::streamsize>(payload.size()));
+            // close() before the check, not after: the write is buffered, so a
+            // full disk or a failing device surfaces on the flush. Letting the
+            // destructor close it would swallow that and rename a truncated
+            // file into place as a finished patch.
+            out.close();
             if (!out) {
                 std::cerr << "  write failed for " << target.filename().string() << '\n';
-                out.close();
+                std::filesystem::remove(temporary, ec);
+                ++skipped;
+                continue;
+            }
+        }
+
+        // The bytes on disk must be the bytes we were handed. Extraction is the
+        // one place this tool creates a file that a user will later treat as an
+        // original, so it is worth the reread (specification section 5).
+        {
+            bool readBack = false;
+            const auto onDisk = readFile(temporary, readBack);
+            if (!readBack || onDisk != patch.payload()) {
+                std::cerr << "  verification failed for " << target.filename().string() << '\n';
                 std::filesystem::remove(temporary, ec);
                 ++skipped;
                 continue;

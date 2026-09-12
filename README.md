@@ -83,6 +83,7 @@ docs/                specification and working documentation
 | [`docs/UI_SPEC.md`](docs/UI_SPEC.md) | GUI specification (Phase B) |
 | [`docs/TEST_MATRIX.md`](docs/TEST_MATRIX.md) | Coverage per format and operation |
 | [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md) | Honest limitations |
+| [`docs/AUDIT_2026-09-12.md`](docs/AUDIT_2026-09-12.md) | Audit of the KA1/KAA subsystem |
 | [`docs/HARDWARE_ACCEPTANCE.md`](docs/HARDWARE_ACCEPTANCE.md) | Real K5000S / Gotek test log |
 | [`docs/THIRD_PARTY_NOTICES.md`](docs/THIRD_PARTY_NOTICES.md) | Dependencies and attribution |
 

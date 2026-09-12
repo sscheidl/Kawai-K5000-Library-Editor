@@ -4,6 +4,10 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
+#include <random>
+#include <vector>
+
 using namespace k5000;
 using k5000::test::SourceSpec;
 
@@ -243,5 +247,82 @@ TEST_CASE("the checksum helper matches the documented formula", "[ka1][checksum]
     for (std::size_t i = 1; i < ka1::patchSize(2, 0); ++i) {
         total += payload[i];
     }
-    CHECK(ka1::computeChecksum(payload, 2) == static_cast<std::uint8_t>(total & 0x7F));
+    REQUIRE(ka1::computeChecksum(payload, 2).has_value());
+    CHECK(*ka1::computeChecksum(payload, 2) == static_cast<std::uint8_t>(total & 0x7F));
+}
+
+TEST_CASE("the checksum helper refuses input it cannot sum", "[ka1][checksum]") {
+    // It must not answer with a number. 0x00 is a legal checksum, so a
+    // fabricated zero is indistinguishable from a computed one at the call
+    // site - and the caller has no way left to notice it asked the impossible.
+    const auto payload = test::makeSingle("Short   ", {pcm, pcm});
+
+    SECTION("payload shorter than the declared sources") {
+        const std::vector<std::uint8_t> cut(payload.begin(), payload.begin() + 200);
+        CHECK_FALSE(ka1::computeChecksum(cut, 2).has_value());
+    }
+    SECTION("empty payload") {
+        CHECK_FALSE(ka1::computeChecksum({}, 2).has_value());
+    }
+    SECTION("impossible source count") {
+        CHECK_FALSE(ka1::computeChecksum(payload, 0).has_value());
+        CHECK_FALSE(ka1::computeChecksum(payload, 7).has_value());
+    }
+    SECTION("a wave kit that is not exactly one kit long") {
+        const std::vector<std::uint8_t> kit(ka1::kAddWaveKitSize - 1, 0x40);
+        CHECK_FALSE(ka1::computeAddWaveKitChecksum(kit).has_value());
+    }
+}
+
+TEST_CASE("the parser survives truncation at every offset", "[ka1][fuzz]") {
+    // Specification section 35: malformed input is reported, never fatal.
+    // Every prefix of a well-formed patch is fed back in. None may crash, and
+    // none may claim to be Valid, because none of them is a whole patch.
+    const auto full = test::makeSingle("Truncate", {add, pcm, add});
+
+    for (std::size_t length = 0; length < full.size(); ++length) {
+        const std::vector<std::uint8_t> cut(full.begin(), full.begin() + static_cast<std::ptrdiff_t>(length));
+        const auto result = ka1::parse(cut);
+        INFO("truncated to " << length << " of " << full.size() << " bytes");
+        CHECK(result.single.validationState != ValidationState::Valid);
+        CHECK_FALSE(result.single.diagnostics.empty());
+        CHECK(result.single.rawPayload.size() <= cut.size());
+    }
+}
+
+TEST_CASE("the parser survives arbitrary byte damage", "[ka1][fuzz]") {
+    // A deterministic mutation sweep, seeded so a failure is reproducible.
+    // The parser is not required to make sense of any of this - only to stay
+    // inside its span, keep its promises about the payload it hands back, and
+    // never report a patch it could not traverse as Valid.
+    auto payload = test::makeSingle("Fuzzed  ", {add, pcm});
+    std::mt19937 rng(0x5000A1);
+    std::uniform_int_distribution<int> byteAt(0, static_cast<int>(payload.size()) - 1);
+    std::uniform_int_distribution<int> value(0, 255);
+
+    for (int iteration = 0; iteration < 2000; ++iteration) {
+        auto mutated = payload;
+        const int damage = 1 + iteration % 8;
+        for (int i = 0; i < damage; ++i) {
+            mutated[static_cast<std::size_t>(byteAt(rng))] = static_cast<std::uint8_t>(value(rng));
+        }
+
+        const auto result = ka1::parse(mutated);
+        INFO("iteration " << iteration);
+
+        if (result.structureKnown) {
+            // Whatever it decided the patch was, the payload must be exactly
+            // that many bytes and must come from inside the input.
+            CHECK(result.single.rawPayload.size() == result.single.structuralSize);
+            CHECK(result.single.structuralSize <= mutated.size());
+            CHECK(std::equal(result.single.rawPayload.begin(), result.single.rawPayload.end(),
+                             mutated.begin()));
+            CHECK(result.single.sourceCount >= ka1::kMinSources);
+            CHECK(result.single.sourceCount <= ka1::kMaxSources);
+            CHECK(result.single.addSourceCount <= result.single.sourceCount);
+        } else {
+            CHECK(result.single.validationState != ValidationState::Valid);
+            CHECK_FALSE(result.single.diagnostics.empty());
+        }
+    }
 }

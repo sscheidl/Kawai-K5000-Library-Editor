@@ -51,18 +51,21 @@ std::string Single::trimmedName() const {
     return trimmed;
 }
 
-std::uint8_t computeChecksum(std::span<const std::uint8_t> payload, int sources) {
+std::optional<std::uint8_t> computeChecksum(std::span<const std::uint8_t> payload, int sources) {
+    if (sources < kMinSources || sources > kMaxSources) {
+        return std::nullopt;
+    }
     const std::size_t end = kCommonSize + kSourceDescriptorSize * static_cast<std::size_t>(sources);
-    if (payload.size() < end || end == 0) {
-        return 0;
+    if (payload.size() < end) {
+        return std::nullopt;
     }
     const std::uint32_t total = sumBytes(payload.subspan(1, end - 1)) + kChecksumSeed;
     return static_cast<std::uint8_t>(total & 0x7F);
 }
 
-std::uint8_t computeAddWaveKitChecksum(std::span<const std::uint8_t> kit) {
+std::optional<std::uint8_t> computeAddWaveKitChecksum(std::span<const std::uint8_t> kit) {
     if (kit.size() != kAddWaveKitSize) {
-        return 0;
+        return std::nullopt;
     }
     const std::uint32_t total = sumBytes(kit.subspan(1)) + kChecksumSeed;
     return static_cast<std::uint8_t>(total & 0x7F);
@@ -189,7 +192,10 @@ ParseResult parse(std::span<const std::uint8_t> bytes, const ParseOptions& optio
     }
 
     // --- checksums ---------------------------------------------------------
-    single.checksumCalculated = computeChecksum(bytes, sourceCount);
+    // The structural checks above guarantee both preconditions, so this cannot
+    // be nullopt here; assert that rather than papering over it with a value.
+    const auto patchChecksum = computeChecksum(bytes, sourceCount);
+    single.checksumCalculated = patchChecksum.value();
     if (!single.checksumMatches()) {
         sink.add(makeDiagnostic(DiagnosticCode::PatchChecksumMismatch,
                                 ValidationState::ChecksumMismatch, kChecksumOffset,
@@ -200,7 +206,7 @@ ParseResult parse(std::span<const std::uint8_t> bytes, const ParseOptions& optio
         for (int kit = 0; kit < addSources; ++kit) {
             const std::size_t offset = addWaveKitOffset(sourceCount, kit);
             const auto kitBytes = bytes.subspan(offset, kAddWaveKitSize);
-            const std::uint8_t expected = computeAddWaveKitChecksum(kitBytes);
+            const std::uint8_t expected = computeAddWaveKitChecksum(kitBytes).value();
             if (kitBytes[0] != expected) {
                 sink.add(makeDiagnostic(DiagnosticCode::AddWaveKitChecksumMismatch,
                                         ValidationState::ChecksumMismatch, offset, expected,
