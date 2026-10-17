@@ -3,6 +3,8 @@
 Offline librarian, bank builder, format converter and Gotek/FlashFloppy disk-image
 manager for the **Kawai K5000S / K5000R**.
 
+![Preview of the K5000 Librarian and Gotek Builder](https://taureon-music.de/images/taureon/dev_lab/KAWAI_K5000_librarian.png)
+
 > This is **not** a synthesizer parameter editor. Additive/harmonic editing is
 > explicitly out of scope — see [`docs/MASTER_SPECIFICATION.md`](docs/MASTER_SPECIFICATION.md) §22.
 
