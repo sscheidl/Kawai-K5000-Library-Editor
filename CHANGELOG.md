@@ -6,6 +6,41 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Audited
+
+- **The KA1/KAA subsystem freeze is lifted.** The commissioned Codex review never
+  reported, so the audit was carried out in its place and recorded in
+  `docs/AUDIT_2026-09-12.md`. Every quantitative claim was re-derived from the
+  corpus with an implementation written independently of both the C++ parser and
+  `tools/research/`, and all of them hold: 937/937 patch checksums, 4072/4072
+  slot checksums, 2210 byte-identical extractions, 8 fragmented banks, 28 stale
+  kit pointers. The format rules survived unchanged; the six defects found are in
+  the harness that proves them and in the one path that writes files.
+
+### Fixed
+
+- **The golden tests silently ignored corpus files they could not open** (P1).
+  Four commercial banks behind paths longer than `MAX_PATH` were dropped and the
+  suite still reported 100% passed, while every golden test's claim rests on
+  having read the whole corpus. Unreadable files are now collected and fail a
+  test of their own.
+- **`k5000cli extract` promoted unverified writes** (P1). The output stream was
+  checked before the buffered flush in the destructor, so a failed write could be
+  renamed into place, counted as written and reported as success. The stream is
+  now closed and checked first, and the file is read back and compared against
+  the payload before the rename.
+- **`computeChecksum` fabricated a plausible answer** (P2). It returned `0` — a
+  legal Kawai checksum — for input it could not sum. Both checksum helpers now
+  return `std::optional<std::uint8_t>`.
+- **Two golden tests asserted nothing that could fail** (P2). `identical > 0` and
+  `fragmentedBanks >= 0` both stayed green under a mutation that welded padding
+  onto payloads across the whole corpus. Both now pin the measured figures, and
+  the mutation fails them.
+- **A wrong bank base address had no bank-level signal** (P3). It surfaced as up
+  to 128 unrelated-looking checksum mismatches. `BankBaseAddressSuspect` now
+  reports the shared cause when every readable slot fails, with a two-slot
+  minimum so a single damaged patch is still called a damaged patch.
+
 ### Added
 
 - Repository scaffold: CMake project, presets, shared compile options, CI,

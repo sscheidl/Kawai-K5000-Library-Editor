@@ -28,15 +28,14 @@ std::vector<std::uint8_t> readFile(const std::filesystem::path& path, bool& ok) 
 void printDiagnostics(const std::vector<k5000::Diagnostic>& diagnostics,
                       const std::filesystem::path& source) {
     for (const auto& diagnostic : diagnostics) {
-        std::cout << "  [" << k5000::toString(diagnostic.severity) << "] "
-                  << source.filename().string() << ": " << diagnostic.message() << '\n';
+        std::cout << "  [" << k5000::toString(diagnostic.severity) << "] " << source.filename().string()
+                  << ": " << diagnostic.message() << '\n';
     }
 }
 
 void printSupport(const k5000::FormatSupport& s) {
-    std::cout << "  " << std::left << std::setw(6) << s.format
-              << " parsing=" << std::setw(17) << k5000::toString(s.parsing)
-              << " writing=" << std::setw(13) << k5000::toString(s.writing)
+    std::cout << "  " << std::left << std::setw(6) << s.format << " parsing=" << std::setw(17)
+              << k5000::toString(s.parsing) << " writing=" << std::setw(13) << k5000::toString(s.writing)
               << " conversion=" << k5000::toString(s.conversion) << '\n';
 }
 
@@ -58,8 +57,8 @@ int commandInfoKa1(const std::filesystem::path& path, const std::vector<std::uin
     std::cout << path.filename().string() << '\n'
               << "  state           : " << k5000::toString(single.validationState) << '\n'
               << "  name            : \"" << single.name << "\"\n"
-              << "  sources         : " << single.sourceCount << " (" << single.addSourceCount
-              << " ADD, " << single.sourceCount - single.addSourceCount << " PCM)\n";
+              << "  sources         : " << single.sourceCount << " (" << single.addSourceCount << " ADD, "
+              << single.sourceCount - single.addSourceCount << " PCM)\n";
 
     if (result.structureKnown) {
         std::cout << "  structural size : " << single.structuralSize << " bytes\n"
@@ -69,9 +68,8 @@ int commandInfoKa1(const std::filesystem::path& path, const std::vector<std::uin
                   << static_cast<int>(single.checksumCalculated) << std::dec << std::nouppercase
                   << (single.checksumMatches() ? "  (match)" : "  (MISMATCH)") << '\n';
         for (const auto& source : single.sources) {
-            std::cout << "    source " << source.index + 1 << ": "
-                      << k5000::ka1::toString(source.type) << ", wave kit " << source.waveKit
-                      << '\n';
+            std::cout << "    source " << source.index + 1 << ": " << k5000::ka1::toString(source.type)
+                      << ", wave kit " << source.waveKit << '\n';
         }
     }
 
@@ -94,8 +92,8 @@ int commandInfoKaa(const std::filesystem::path& path, const std::vector<std::uin
               << std::nouppercase << '\n'
               << "  occupied    : " << bank.occupiedSlotCount() << " / " << k5000::kaa::kSlotCount
               << " slots\n"
-              << "  used        : " << bank.usedBytes() << " / " << k5000::kaa::kPatchDataBudget
-              << " bytes (" << bank.usedBytes() * 100 / k5000::kaa::kPatchDataBudget << "%)\n";
+              << "  used        : " << bank.usedBytes() << " / " << k5000::kaa::kPatchDataBudget << " bytes ("
+              << bank.usedBytes() * 100 / k5000::kaa::kPatchDataBudget << "%)\n";
 
     const auto extraction = k5000::kaa::extractAll(bank, bytes);
     std::cout << "  extracted   : " << extraction.patches.size() << " patches";
@@ -105,10 +103,10 @@ int commandInfoKaa(const std::filesystem::path& path, const std::vector<std::uin
     std::cout << '\n';
 
     for (const auto& patch : extraction.patches) {
-        std::cout << "    " << std::setw(3) << patch.slot + 1 << "  \"" << patch.single.name
-                  << "\"  " << std::setw(5) << patch.single.structuralSize << " bytes  "
-                  << patch.single.sourceCount << " src / " << patch.single.addSourceCount
-                  << " ADD  " << k5000::toString(patch.single.validationState) << '\n';
+        std::cout << "    " << std::setw(3) << patch.slot + 1 << "  \"" << patch.single.name << "\"  "
+                  << std::setw(5) << patch.single.structuralSize << " bytes  " << patch.single.sourceCount
+                  << " src / " << patch.single.addSourceCount << " ADD  "
+                  << k5000::toString(patch.single.validationState) << '\n';
     }
 
     printDiagnostics(bank.diagnostics, path);
@@ -119,8 +117,8 @@ int commandInfoKaa(const std::filesystem::path& path, const std::vector<std::uin
 std::string sanitize(const std::string& name) {
     std::string out;
     for (char c : name) {
-        const bool invalid = c == '<' || c == '>' || c == ':' || c == '"' || c == '/' || c == '\\'
-                             || c == '|' || c == '?' || c == '*' || static_cast<unsigned char>(c) < 0x20;
+        const bool invalid = c == '<' || c == '>' || c == ':' || c == '"' || c == '/' || c == '\\' ||
+                             c == '|' || c == '?' || c == '*' || static_cast<unsigned char>(c) < 0x20;
         out.push_back(invalid ? '_' : c);
     }
     while (!out.empty() && (out.back() == ' ' || out.back() == '.')) {
@@ -154,6 +152,10 @@ int commandExtract(const std::filesystem::path& path, const std::vector<std::uin
         std::snprintf(prefix, sizeof(prefix), "A%03d_", patch.slot + 1);
         const auto target = outDir / (prefix + sanitize(patch.single.trimmedName()) + ".KA1");
 
+        // Known gap, accepted for a diagnostic tool: another process could
+        // create `target` between this check and the rename below, and
+        // std::filesystem::rename replaces an existing file. Closing that race
+        // needs an exclusive-create rename, which is platform-specific.
         if (std::filesystem::exists(target)) {
             std::cerr << "  refusing to overwrite " << target.filename().string() << '\n';
             ++skipped;
@@ -167,9 +169,27 @@ int commandExtract(const std::filesystem::path& path, const std::vector<std::uin
             const auto& payload = patch.payload();
             out.write(reinterpret_cast<const char*>(payload.data()),
                       static_cast<std::streamsize>(payload.size()));
+            // close() before the check, not after: the write is buffered, so a
+            // full disk or a failing device surfaces on the flush. Letting the
+            // destructor close it would swallow that and rename a truncated
+            // file into place as a finished patch.
+            out.close();
             if (!out) {
                 std::cerr << "  write failed for " << target.filename().string() << '\n';
-                out.close();
+                std::filesystem::remove(temporary, ec);
+                ++skipped;
+                continue;
+            }
+        }
+
+        // The bytes on disk must be the bytes we were handed. Extraction is the
+        // one place this tool creates a file that a user will later treat as an
+        // original, so it is worth the reread (specification section 5).
+        {
+            bool readBack = false;
+            const auto onDisk = readFile(temporary, readBack);
+            if (!readBack || onDisk != patch.payload()) {
+                std::cerr << "  verification failed for " << target.filename().string() << '\n';
                 std::filesystem::remove(temporary, ec);
                 ++skipped;
                 continue;
@@ -217,8 +237,7 @@ int main(int argc, char** argv) {
         return commandFormats();
     }
 
-    if ((args[0] == "info" && args.size() == 2)
-        || (args[0] == "extract" && args.size() == 3)) {
+    if ((args[0] == "info" && args.size() == 2) || (args[0] == "extract" && args.size() == 3)) {
         const std::filesystem::path path(args[1]);
         bool ok = false;
         const auto bytes = readFile(path, ok);

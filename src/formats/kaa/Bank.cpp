@@ -13,8 +13,7 @@ constexpr std::string_view kFormat = "KAA";
 Diagnostic makeDiagnostic(DiagnosticCode code, ValidationState severity,
                           std::optional<std::size_t> offset = std::nullopt,
                           std::optional<std::int64_t> expected = std::nullopt,
-                          std::optional<std::int64_t> actual = std::nullopt,
-                          std::string detail = {}) {
+                          std::optional<std::int64_t> actual = std::nullopt, std::string detail = {}) {
     Diagnostic d;
     d.code = code;
     d.severity = severity;
@@ -27,18 +26,17 @@ Diagnostic makeDiagnostic(DiagnosticCode code, ValidationState severity,
 }
 
 std::uint32_t readBigEndian32(std::span<const std::uint8_t> bytes, std::size_t offset) {
-    return (static_cast<std::uint32_t>(bytes[offset]) << 24)
-           | (static_cast<std::uint32_t>(bytes[offset + 1]) << 16)
-           | (static_cast<std::uint32_t>(bytes[offset + 2]) << 8)
-           | static_cast<std::uint32_t>(bytes[offset + 3]);
+    return (static_cast<std::uint32_t>(bytes[offset]) << 24) |
+           (static_cast<std::uint32_t>(bytes[offset + 1]) << 16) |
+           (static_cast<std::uint32_t>(bytes[offset + 2]) << 8) |
+           static_cast<std::uint32_t>(bytes[offset + 3]);
 }
 
 } // namespace
 
 int Slot::addWaveKitPointerCount() const noexcept {
-    return static_cast<int>(
-        std::count_if(addWaveKitPointers.begin(), addWaveKitPointers.end(),
-                      [](std::uint32_t p) { return p != 0; }));
+    return static_cast<int>(std::count_if(addWaveKitPointers.begin(), addWaveKitPointers.end(),
+                                          [](std::uint32_t p) { return p != 0; }));
 }
 
 int Bank::occupiedSlotCount() const noexcept {
@@ -89,8 +87,8 @@ BankResult parseBank(std::span<const std::uint8_t> bytes) {
     DiagnosticSink sink;
 
     if (bytes.size() != kFileSize) {
-        sink.add(makeDiagnostic(DiagnosticCode::BankUnexpectedFileSize, ValidationState::Malformed,
-                                0, static_cast<std::int64_t>(kFileSize),
+        sink.add(makeDiagnostic(DiagnosticCode::BankUnexpectedFileSize, ValidationState::Malformed, 0,
+                                static_cast<std::int64_t>(kFileSize),
                                 static_cast<std::int64_t>(bytes.size())));
         bank.validationState = sink.state();
         bank.diagnostics = sink.entries();
@@ -112,8 +110,8 @@ BankResult parseBank(std::span<const std::uint8_t> bytes) {
         }
 
         // The base is the smallest non-zero pointer anywhere in the table,
-        // including ADD-kit pointers - a stale kit pointer can still be the
-        // lowest address the bank ever used.
+        // including ADD-kit pointers. See the note in Bank.h: on the corpus
+        // this is indistinguishable from scanning patch pointers alone.
         if (slot.patchPointer != 0) {
             base = std::min(base, slot.patchPointer);
             anyPointer = true;
@@ -158,12 +156,11 @@ BankResult parseBank(std::span<const std::uint8_t> bytes) {
         }
         for (int p = sources; p < 6; ++p) {
             if (slot.addWaveKitPointers[static_cast<std::size_t>(p)] != 0) {
-                sink.add(makeDiagnostic(DiagnosticCode::BankStaleAddKitPointer,
-                                        ValidationState::UnsupportedVariant,
-                                        static_cast<std::size_t>(slot.index) * kPointersPerSlot * 4,
-                                        sources, p + 1,
-                                        "slot " + std::to_string(slot.index + 1)
-                                            + ": ADD kit pointer for a source that does not exist"));
+                sink.add(makeDiagnostic(
+                    DiagnosticCode::BankStaleAddKitPointer, ValidationState::UnsupportedVariant,
+                    static_cast<std::size_t>(slot.index) * kPointersPerSlot * 4, sources, p + 1,
+                    "slot " + std::to_string(slot.index + 1) +
+                        ": ADD kit pointer for a source that does not exist"));
                 break;
             }
         }
@@ -195,9 +192,8 @@ std::optional<ExtractedPatch> extractSlot(const Bank& bank, std::span<const std:
 
     const auto offset = bank.fileOffset(slot.patchPointer);
     if (!offset) {
-        sink.add(makeDiagnostic(DiagnosticCode::BankPointerOutsideDataRegion,
-                                ValidationState::Malformed, std::nullopt,
-                                static_cast<std::int64_t>(kDataRegionSize),
+        sink.add(makeDiagnostic(DiagnosticCode::BankPointerOutsideDataRegion, ValidationState::Malformed,
+                                std::nullopt, static_cast<std::int64_t>(kDataRegionSize),
                                 slot.patchPointer - bank.baseAddress,
                                 "slot " + std::to_string(slotIndex + 1)));
         return std::nullopt;
@@ -222,17 +218,16 @@ std::optional<ExtractedPatch> extractSlot(const Bank& bank, std::span<const std:
     }
 
     if (!parsed.structureKnown) {
-        sink.add(makeDiagnostic(DiagnosticCode::BankSlotUnreadable, ValidationState::Malformed,
-                                *offset, std::nullopt, std::nullopt,
-                                "slot " + std::to_string(slotIndex + 1)
-                                    + ": patch structure could not be determined"));
+        sink.add(makeDiagnostic(DiagnosticCode::BankSlotUnreadable, ValidationState::Malformed, *offset,
+                                std::nullopt, std::nullopt,
+                                "slot " + std::to_string(slotIndex + 1) +
+                                    ": patch structure could not be determined"));
         return std::nullopt;
     }
 
     if (*offset + parsed.single.structuralSize > kHeaderSize + kDataRegionSize) {
-        sink.add(makeDiagnostic(DiagnosticCode::BankPatchExceedsDataRegion,
-                                ValidationState::Malformed, *offset,
-                                static_cast<std::int64_t>(kHeaderSize + kDataRegionSize),
+        sink.add(makeDiagnostic(DiagnosticCode::BankPatchExceedsDataRegion, ValidationState::Malformed,
+                                *offset, static_cast<std::int64_t>(kHeaderSize + kDataRegionSize),
                                 static_cast<std::int64_t>(*offset + parsed.single.structuralSize),
                                 "slot " + std::to_string(slotIndex + 1)));
         return std::nullopt;
@@ -259,6 +254,22 @@ ExtractionResult extractAll(const Bank& bank, std::span<const std::uint8_t> byte
         } else {
             result.failedSlots.push_back(slotIndex);
         }
+    }
+
+    // A wrong base address does not corrupt one patch, it shifts every offset
+    // in the bank. Each slot then reports its own checksum mismatch and the
+    // shared cause stays invisible. One bank-level diagnostic says it plainly.
+    // Requires at least two slots: a single mismatching patch is just a
+    // damaged patch, and calling that a base-address failure would be a guess.
+    const int examined = static_cast<int>(result.patches.size());
+    const int mismatching =
+        static_cast<int>(std::count_if(result.patches.begin(), result.patches.end(),
+                                       [](const ExtractedPatch& p) { return !p.single.checksumMatches(); }));
+    if (examined >= 2 && mismatching == examined) {
+        result.baseAddressSuspect = true;
+        sink.add(makeDiagnostic(DiagnosticCode::BankBaseAddressSuspect, ValidationState::Malformed,
+                                std::nullopt, 0, mismatching,
+                                "all " + std::to_string(examined) + " readable slots failed their checksum"));
     }
 
     result.diagnostics = sink.entries();

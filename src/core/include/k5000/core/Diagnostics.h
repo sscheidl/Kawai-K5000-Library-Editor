@@ -51,7 +51,8 @@ enum class DiagnosticCode {
     BankPointerOutsideDataRegion,
     BankPatchExceedsDataRegion,
     BankStaleAddKitPointer,
-    BankSlotUnreadable
+    BankSlotUnreadable,
+    BankBaseAddressSuspect
 };
 
 std::string_view toString(DiagnosticCode code) noexcept;
@@ -63,8 +64,8 @@ std::string_view toString(DiagnosticCode code) noexcept;
 struct Diagnostic {
     DiagnosticCode code{};
     ValidationState severity = ValidationState::Malformed;
-    std::string_view format;              // "KA1", "KAA", ...
-    std::optional<std::size_t> offset;    // byte offset within the input
+    std::string_view format;           // "KA1", "KAA", ...
+    std::optional<std::size_t> offset; // byte offset within the input
     std::optional<std::int64_t> expected;
     std::optional<std::int64_t> actual;
     std::string detail;

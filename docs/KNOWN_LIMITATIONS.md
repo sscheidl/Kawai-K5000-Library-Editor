@@ -33,8 +33,8 @@ Multi SysEx have not been examined.
 
 **No FAT12/IMG.** The format is publicly documented; nothing is implemented.
 
-**No GUI.** Qt 6 is not installed on the development machine, so the GUI target
-is skipped by default. See [`TOOLCHAIN.md`](TOOLCHAIN.md).
+**No GUI.** Qt 6.10.3 is installed and detected, but no GUI code exists yet, so
+`src/gui` and `src/app` are still skipped. See [`TOOLCHAIN.md`](TOOLCHAIN.md).
 
 ## Structural limitations of Version 1
 
@@ -69,3 +69,21 @@ Recorded in full in [`FORMAT_NOTES.md`](FORMAT_NOTES.md):
   not affect V1, which only needs the `== 512` additive test.
 - One corpus file is structurally ambiguous and is reported as such rather than
   guessed. 25 more are malformed and are rejected with a reason.
+
+## Limits found by the 2026-09-12 audit
+
+Full detail in [`AUDIT_2026-09-12.md`](AUDIT_2026-09-12.md).
+
+- **The KAA base address is a heuristic, not a value read from the file.** It
+  assumes the lowest address any pointer still names is where the data region
+  begins. Deleting the first-allocated patch from a bank would break that, and
+  because deleted bytes remain in place the slots could still parse and fail only
+  on their checksums. No corpus bank does this. A bank where every readable slot
+  fails is now reported as a suspect base rather than as many damaged patches.
+- **`k5000cli extract` has a TOCTOU gap.** Another process could create the
+  target file between the overwrite check and the rename, and
+  `std::filesystem::rename` replaces an existing file. Accepted for a diagnostic
+  tool; it must not be inherited by the GUI export path.
+- **Golden-test coverage depends on a short corpus path on Windows.** Files
+  behind paths over `MAX_PATH` cannot be opened. This no longer passes in
+  silence, but it does still reduce what a run proves — the suite tells you.

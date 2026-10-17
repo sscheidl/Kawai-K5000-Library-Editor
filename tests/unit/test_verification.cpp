@@ -10,17 +10,15 @@
 
 using namespace k5000;
 
-TEST_CASE("verification levels are ordered and a conversion is capped by its weaker end",
-          "[verification]") {
+TEST_CASE("verification levels are ordered and a conversion is capped by its weaker end", "[verification]") {
     CHECK(VerificationLevel::Unsupported < VerificationLevel::Experimental);
     CHECK(VerificationLevel::Experimental < VerificationLevel::Observed);
     CHECK(VerificationLevel::Observed < VerificationLevel::GoldenTested);
     CHECK(VerificationLevel::GoldenTested < VerificationLevel::HardwareVerified);
 
-    CHECK(weaker(VerificationLevel::GoldenTested, VerificationLevel::Experimental)
-          == VerificationLevel::Experimental);
-    CHECK(weaker(VerificationLevel::Observed, VerificationLevel::Observed)
-          == VerificationLevel::Observed);
+    CHECK(weaker(VerificationLevel::GoldenTested, VerificationLevel::Experimental) ==
+          VerificationLevel::Experimental);
+    CHECK(weaker(VerificationLevel::Observed, VerificationLevel::Observed) == VerificationLevel::Observed);
 }
 
 TEST_CASE("writing is disabled below GoldenTested", "[verification]") {
@@ -59,21 +57,19 @@ TEST_CASE("every claimed level carries an evidence statement", "[verification]")
 }
 
 TEST_CASE("the worse validation state wins when observations combine", "[diagnostics]") {
-    CHECK(worst(ValidationState::Valid, ValidationState::ChecksumMismatch)
-          == ValidationState::ChecksumMismatch);
-    CHECK(worst(ValidationState::ChecksumMismatch, ValidationState::Malformed)
-          == ValidationState::Malformed);
-    CHECK(worst(ValidationState::Truncated, ValidationState::StructurallyAmbiguous)
-          == ValidationState::Truncated);
+    CHECK(worst(ValidationState::Valid, ValidationState::ChecksumMismatch) ==
+          ValidationState::ChecksumMismatch);
+    CHECK(worst(ValidationState::ChecksumMismatch, ValidationState::Malformed) == ValidationState::Malformed);
+    CHECK(worst(ValidationState::Truncated, ValidationState::StructurallyAmbiguous) ==
+          ValidationState::Truncated);
     // An ambiguous extent outranks an unrecognised variant: not knowing which
     // bytes belong to the patch is worse than not recognising what they mean.
-    CHECK(worst(ValidationState::UnsupportedVariant, ValidationState::StructurallyAmbiguous)
-          == ValidationState::StructurallyAmbiguous);
+    CHECK(worst(ValidationState::UnsupportedVariant, ValidationState::StructurallyAmbiguous) ==
+          ValidationState::StructurallyAmbiguous);
     CHECK(worst(ValidationState::Valid, ValidationState::Valid) == ValidationState::Valid);
 }
 
-TEST_CASE("a diagnostic message names the format, offset and both conditions",
-          "[diagnostics]") {
+TEST_CASE("a diagnostic message names the format, offset and both conditions", "[diagnostics]") {
     Diagnostic diagnostic;
     diagnostic.code = DiagnosticCode::PatchChecksumMismatch;
     diagnostic.severity = ValidationState::ChecksumMismatch;

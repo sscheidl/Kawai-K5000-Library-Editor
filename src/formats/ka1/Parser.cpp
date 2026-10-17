@@ -10,8 +10,7 @@ constexpr std::string_view kFormat = "KA1";
 Diagnostic makeDiagnostic(DiagnosticCode code, ValidationState severity,
                           std::optional<std::size_t> offset = std::nullopt,
                           std::optional<std::int64_t> expected = std::nullopt,
-                          std::optional<std::int64_t> actual = std::nullopt,
-                          std::string detail = {}) {
+                          std::optional<std::int64_t> actual = std::nullopt, std::string detail = {}) {
     Diagnostic d;
     d.code = code;
     d.severity = severity;
@@ -51,18 +50,21 @@ std::string Single::trimmedName() const {
     return trimmed;
 }
 
-std::uint8_t computeChecksum(std::span<const std::uint8_t> payload, int sources) {
+std::optional<std::uint8_t> computeChecksum(std::span<const std::uint8_t> payload, int sources) {
+    if (sources < kMinSources || sources > kMaxSources) {
+        return std::nullopt;
+    }
     const std::size_t end = kCommonSize + kSourceDescriptorSize * static_cast<std::size_t>(sources);
-    if (payload.size() < end || end == 0) {
-        return 0;
+    if (payload.size() < end) {
+        return std::nullopt;
     }
     const std::uint32_t total = sumBytes(payload.subspan(1, end - 1)) + kChecksumSeed;
     return static_cast<std::uint8_t>(total & 0x7F);
 }
 
-std::uint8_t computeAddWaveKitChecksum(std::span<const std::uint8_t> kit) {
+std::optional<std::uint8_t> computeAddWaveKitChecksum(std::span<const std::uint8_t> kit) {
     if (kit.size() != kAddWaveKitSize) {
-        return 0;
+        return std::nullopt;
     }
     const std::uint32_t total = sumBytes(kit.subspan(1)) + kChecksumSeed;
     return static_cast<std::uint8_t>(total & 0x7F);
@@ -107,8 +109,7 @@ ParseResult parse(std::span<const std::uint8_t> bytes, const ParseOptions& optio
     const int sourceCount = static_cast<int>(bytes[kSourceCountOffset]);
     if (sourceCount < kMinSources || sourceCount > kMaxSources) {
         sink.add(makeDiagnostic(DiagnosticCode::SourceCountOutOfRange, ValidationState::Malformed,
-                                kSourceCountOffset, kMaxSources, sourceCount,
-                                "source count must be 1..6"));
+                                kSourceCountOffset, kMaxSources, sourceCount, "source count must be 1..6"));
         single.validationState = sink.state();
         single.diagnostics = sink.entries();
         return result;
@@ -118,9 +119,8 @@ ParseResult parse(std::span<const std::uint8_t> bytes, const ParseOptions& optio
     // --- source descriptors ----------------------------------------------
     const std::size_t afterSources = patchSize(sourceCount, 0);
     if (bytes.size() < afterSources) {
-        sink.add(makeDiagnostic(DiagnosticCode::TruncatedSourceDescriptors,
-                                ValidationState::Truncated, kCommonSize,
-                                static_cast<std::int64_t>(afterSources),
+        sink.add(makeDiagnostic(DiagnosticCode::TruncatedSourceDescriptors, ValidationState::Truncated,
+                                kCommonSize, static_cast<std::int64_t>(afterSources),
                                 static_cast<std::int64_t>(bytes.size())));
         single.validationState = sink.state();
         single.diagnostics = sink.entries();
@@ -135,8 +135,7 @@ ParseResult parse(std::span<const std::uint8_t> bytes, const ParseOptions& optio
         descriptor.offset = sourceDescriptorOffset(i);
         const std::size_t waveOffset = descriptor.offset + kWaveKitOffsetInSource;
         descriptor.waveKit = static_cast<std::uint16_t>((bytes[waveOffset] << 7) | bytes[waveOffset + 1]);
-        descriptor.type =
-            (descriptor.waveKit == kAdditiveWaveKit) ? SourceType::Additive : SourceType::Pcm;
+        descriptor.type = (descriptor.waveKit == kAdditiveWaveKit) ? SourceType::Additive : SourceType::Pcm;
         if (descriptor.type == SourceType::Additive) {
             ++addSources;
         } else if (descriptor.waveKit > kMaxWaveKit) {
@@ -144,8 +143,7 @@ ParseResult parse(std::span<const std::uint8_t> bytes, const ParseOptions& optio
             // the conflict surfaces below if the length disagrees.
             sink.add(makeDiagnostic(DiagnosticCode::WaveKitNumberOutOfRange,
                                     ValidationState::UnsupportedVariant, waveOffset, kMaxWaveKit,
-                                    descriptor.waveKit,
-                                    "source " + std::to_string(i + 1)));
+                                    descriptor.waveKit, "source " + std::to_string(i + 1)));
         }
         single.sources.push_back(descriptor);
     }
@@ -154,8 +152,8 @@ ParseResult parse(std::span<const std::uint8_t> bytes, const ParseOptions& optio
     // --- ADD wave kits ----------------------------------------------------
     const std::size_t structuralSize = patchSize(sourceCount, addSources);
     if (bytes.size() < structuralSize) {
-        sink.add(makeDiagnostic(DiagnosticCode::TruncatedAddWaveKit, ValidationState::Truncated,
-                                afterSources, static_cast<std::int64_t>(structuralSize),
+        sink.add(makeDiagnostic(DiagnosticCode::TruncatedAddWaveKit, ValidationState::Truncated, afterSources,
+                                static_cast<std::int64_t>(structuralSize),
                                 static_cast<std::int64_t>(bytes.size())));
         single.validationState = sink.state();
         single.diagnostics = sink.entries();
@@ -173,38 +171,39 @@ ParseResult parse(std::span<const std::uint8_t> bytes, const ParseOptions& optio
     if (!options.embedded && bytes.size() != structuralSize) {
         const std::size_t declared = bytes.size();
         const bool wholeKits =
-            declared > afterSources && (declared - afterSources) % kAddWaveKitSize == 0
-            && (declared - afterSources) / kAddWaveKitSize <= static_cast<std::size_t>(sourceCount);
+            declared > afterSources && (declared - afterSources) % kAddWaveKitSize == 0 &&
+            (declared - afterSources) / kAddWaveKitSize <= static_cast<std::size_t>(sourceCount);
         if (wholeKits) {
             sink.add(makeDiagnostic(
-                DiagnosticCode::LengthConflictsWithSourceDescriptors,
-                ValidationState::StructurallyAmbiguous, 0,
-                static_cast<std::int64_t>((declared - afterSources) / kAddWaveKitSize), addSources,
+                DiagnosticCode::LengthConflictsWithSourceDescriptors, ValidationState::StructurallyAmbiguous,
+                0, static_cast<std::int64_t>((declared - afterSources) / kAddWaveKitSize), addSources,
                 "ADD source count from file length vs. from wave kit numbers"));
         } else {
-            sink.add(makeDiagnostic(DiagnosticCode::TrailingBytes, ValidationState::Malformed,
-                                    structuralSize, static_cast<std::int64_t>(structuralSize),
+            sink.add(makeDiagnostic(DiagnosticCode::TrailingBytes, ValidationState::Malformed, structuralSize,
+                                    static_cast<std::int64_t>(structuralSize),
                                     static_cast<std::int64_t>(declared)));
         }
     }
 
     // --- checksums ---------------------------------------------------------
-    single.checksumCalculated = computeChecksum(bytes, sourceCount);
+    // The structural checks above guarantee both preconditions, so this cannot
+    // be nullopt here; assert that rather than papering over it with a value.
+    const auto patchChecksum = computeChecksum(bytes, sourceCount);
+    single.checksumCalculated = patchChecksum.value();
     if (!single.checksumMatches()) {
-        sink.add(makeDiagnostic(DiagnosticCode::PatchChecksumMismatch,
-                                ValidationState::ChecksumMismatch, kChecksumOffset,
-                                single.checksumCalculated, single.checksumStored));
+        sink.add(makeDiagnostic(DiagnosticCode::PatchChecksumMismatch, ValidationState::ChecksumMismatch,
+                                kChecksumOffset, single.checksumCalculated, single.checksumStored));
     }
 
     if (options.verifyAddWaveKitChecksums) {
         for (int kit = 0; kit < addSources; ++kit) {
             const std::size_t offset = addWaveKitOffset(sourceCount, kit);
             const auto kitBytes = bytes.subspan(offset, kAddWaveKitSize);
-            const std::uint8_t expected = computeAddWaveKitChecksum(kitBytes);
+            const std::uint8_t expected = computeAddWaveKitChecksum(kitBytes).value();
             if (kitBytes[0] != expected) {
                 sink.add(makeDiagnostic(DiagnosticCode::AddWaveKitChecksumMismatch,
-                                        ValidationState::ChecksumMismatch, offset, expected,
-                                        kitBytes[0], "ADD wave kit " + std::to_string(kit + 1)));
+                                        ValidationState::ChecksumMismatch, offset, expected, kitBytes[0],
+                                        "ADD wave kit " + std::to_string(kit + 1)));
             }
         }
     }

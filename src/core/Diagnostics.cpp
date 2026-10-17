@@ -7,47 +7,74 @@ namespace k5000 {
 
 std::string_view toString(ValidationState state) noexcept {
     switch (state) {
-    case ValidationState::Valid: return "Valid";
-    case ValidationState::ChecksumMismatch: return "ChecksumMismatch";
-    case ValidationState::StructurallyAmbiguous: return "StructurallyAmbiguous";
-    case ValidationState::UnsupportedVariant: return "UnsupportedVariant";
-    case ValidationState::Truncated: return "Truncated";
-    case ValidationState::Malformed: return "Malformed";
+    case ValidationState::Valid:
+        return "Valid";
+    case ValidationState::ChecksumMismatch:
+        return "ChecksumMismatch";
+    case ValidationState::StructurallyAmbiguous:
+        return "StructurallyAmbiguous";
+    case ValidationState::UnsupportedVariant:
+        return "UnsupportedVariant";
+    case ValidationState::Truncated:
+        return "Truncated";
+    case ValidationState::Malformed:
+        return "Malformed";
     }
     return "Malformed";
 }
 
 std::string_view toString(VerificationLevel level) noexcept {
     switch (level) {
-    case VerificationLevel::Unsupported: return "Unsupported";
-    case VerificationLevel::Experimental: return "Experimental";
-    case VerificationLevel::Observed: return "Observed";
-    case VerificationLevel::GoldenTested: return "GoldenTested";
-    case VerificationLevel::HardwareVerified: return "HardwareVerified";
+    case VerificationLevel::Unsupported:
+        return "Unsupported";
+    case VerificationLevel::Experimental:
+        return "Experimental";
+    case VerificationLevel::Observed:
+        return "Observed";
+    case VerificationLevel::GoldenTested:
+        return "GoldenTested";
+    case VerificationLevel::HardwareVerified:
+        return "HardwareVerified";
     }
     return "Unsupported";
 }
 
 std::string_view toString(DiagnosticCode code) noexcept {
     switch (code) {
-    case DiagnosticCode::TruncatedCommonBlock: return "truncated common block";
-    case DiagnosticCode::TruncatedSourceDescriptors: return "truncated source descriptors";
-    case DiagnosticCode::TruncatedAddWaveKit: return "truncated ADD wave kit";
-    case DiagnosticCode::SourceCountOutOfRange: return "source count out of range";
-    case DiagnosticCode::TrailingBytes: return "trailing bytes after the patch";
-    case DiagnosticCode::PatchChecksumMismatch: return "patch checksum mismatch";
-    case DiagnosticCode::AddWaveKitChecksumMismatch: return "ADD wave kit checksum mismatch";
+    case DiagnosticCode::TruncatedCommonBlock:
+        return "truncated common block";
+    case DiagnosticCode::TruncatedSourceDescriptors:
+        return "truncated source descriptors";
+    case DiagnosticCode::TruncatedAddWaveKit:
+        return "truncated ADD wave kit";
+    case DiagnosticCode::SourceCountOutOfRange:
+        return "source count out of range";
+    case DiagnosticCode::TrailingBytes:
+        return "trailing bytes after the patch";
+    case DiagnosticCode::PatchChecksumMismatch:
+        return "patch checksum mismatch";
+    case DiagnosticCode::AddWaveKitChecksumMismatch:
+        return "ADD wave kit checksum mismatch";
     case DiagnosticCode::LengthConflictsWithSourceDescriptors:
         return "file length and source descriptors disagree on the ADD source count";
-    case DiagnosticCode::WaveKitNumberOutOfRange: return "wave kit number out of range";
-    case DiagnosticCode::BankUnexpectedFileSize: return "unexpected bank file size";
-    case DiagnosticCode::BankNoOccupiedSlots: return "bank has no occupied slot";
-    case DiagnosticCode::BankPointerBelowBase: return "pointer below the bank base address";
-    case DiagnosticCode::BankPointerOutsideDataRegion: return "pointer outside the data region";
-    case DiagnosticCode::BankPatchExceedsDataRegion: return "patch extends past the data region";
+    case DiagnosticCode::WaveKitNumberOutOfRange:
+        return "wave kit number out of range";
+    case DiagnosticCode::BankUnexpectedFileSize:
+        return "unexpected bank file size";
+    case DiagnosticCode::BankNoOccupiedSlots:
+        return "bank has no occupied slot";
+    case DiagnosticCode::BankPointerBelowBase:
+        return "pointer below the bank base address";
+    case DiagnosticCode::BankPointerOutsideDataRegion:
+        return "pointer outside the data region";
+    case DiagnosticCode::BankPatchExceedsDataRegion:
+        return "patch extends past the data region";
     case DiagnosticCode::BankStaleAddKitPointer:
         return "ADD wave kit pointer set beyond the source count (stale)";
-    case DiagnosticCode::BankSlotUnreadable: return "slot could not be read";
+    case DiagnosticCode::BankSlotUnreadable:
+        return "slot could not be read";
+    case DiagnosticCode::BankBaseAddressSuspect:
+        return "every occupied slot failed its checksum - the derived base address is suspect";
     }
     return "unknown diagnostic";
 }
