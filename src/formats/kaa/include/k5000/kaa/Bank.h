@@ -113,9 +113,7 @@ struct ExtractedPatch {
     /// Exactly `single.structuralSize` bytes, copied verbatim from the bank.
     /// Extraction is byte preservation: nothing is normalized, recomputed or
     /// reordered (specification section 5).
-    [[nodiscard]] const std::vector<std::uint8_t>& payload() const noexcept {
-        return single.rawPayload;
-    }
+    [[nodiscard]] const std::vector<std::uint8_t>& payload() const noexcept { return single.rawPayload; }
 };
 
 struct ExtractionResult {
@@ -134,8 +132,7 @@ struct ExtractionResult {
 };
 
 /// Extract one occupied slot.
-[[nodiscard]] std::optional<ExtractedPatch> extractSlot(const Bank& bank,
-                                                        std::span<const std::uint8_t> bytes,
+[[nodiscard]] std::optional<ExtractedPatch> extractSlot(const Bank& bank, std::span<const std::uint8_t> bytes,
                                                         int slotIndex, DiagnosticSink& sink);
 
 /// Extract every occupied slot. Failures are reported, never discarded.

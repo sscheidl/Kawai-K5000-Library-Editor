@@ -22,8 +22,7 @@ struct SourceSpec {
 
 /// Build a structurally valid patch payload with a correct patch checksum and
 /// correct per-kit checksums. Filler bytes stay 7-bit, like real payloads.
-std::vector<std::uint8_t> makeSingle(const std::string& name,
-                                     const std::vector<SourceSpec>& sources,
+std::vector<std::uint8_t> makeSingle(const std::string& name, const std::vector<SourceSpec>& sources,
                                      std::uint8_t filler = 0x40);
 
 /// Recompute and store the patch checksum in place. Used by tests that mutate

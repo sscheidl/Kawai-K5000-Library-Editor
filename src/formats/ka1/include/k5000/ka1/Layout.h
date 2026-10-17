@@ -48,8 +48,8 @@ inline constexpr std::size_t kMaxPatchSize =
     kCommonSize + (kSourceDescriptorSize + kAddWaveKitSize) * kMaxSources;
 
 constexpr std::size_t patchSize(int sources, int addSources) noexcept {
-    return kCommonSize + kSourceDescriptorSize * static_cast<std::size_t>(sources)
-           + kAddWaveKitSize * static_cast<std::size_t>(addSources);
+    return kCommonSize + kSourceDescriptorSize * static_cast<std::size_t>(sources) +
+           kAddWaveKitSize * static_cast<std::size_t>(addSources);
 }
 
 constexpr std::size_t sourceDescriptorOffset(int index) noexcept {
@@ -57,8 +57,8 @@ constexpr std::size_t sourceDescriptorOffset(int index) noexcept {
 }
 
 constexpr std::size_t addWaveKitOffset(int sources, int kitIndex) noexcept {
-    return kCommonSize + kSourceDescriptorSize * static_cast<std::size_t>(sources)
-           + kAddWaveKitSize * static_cast<std::size_t>(kitIndex);
+    return kCommonSize + kSourceDescriptorSize * static_cast<std::size_t>(sources) +
+           kAddWaveKitSize * static_cast<std::size_t>(kitIndex);
 }
 
 } // namespace k5000::ka1

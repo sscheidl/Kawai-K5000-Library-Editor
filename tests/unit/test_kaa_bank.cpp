@@ -79,8 +79,7 @@ TEST_CASE("INVARIANT A: patch length never comes from the pointer delta", "[kaa]
     REQUIRE(parsed.usable);
 
     // The hazard is real: the pointers really are further apart than the patch.
-    const std::uint32_t pointerDelta =
-        parsed.bank.slots[1].patchPointer - parsed.bank.slots[0].patchPointer;
+    const std::uint32_t pointerDelta = parsed.bank.slots[1].patchPointer - parsed.bank.slots[0].patchPointer;
     REQUIRE(pointerDelta == first.size() + kGap);
     REQUIRE(pointerDelta != first.size());
 
@@ -136,8 +135,7 @@ TEST_CASE("INVARIANT A: a stale ADD-kit pointer does not lengthen the patch", "[
     CHECK(extraction.patches[0].payload().size() != 254 + ka1::kAddWaveKitSize);
 }
 
-TEST_CASE("a bank whose every slot fails its checksum reports the base, not the slots",
-          "[kaa][malformed]") {
+TEST_CASE("a bank whose every slot fails its checksum reports the base, not the slots", "[kaa][malformed]") {
     // The base address is derived, not read: it is the lowest address any
     // pointer still names. Delete the patches that sat at the start of the data
     // region and that assumption breaks - the derived base is now too high, and

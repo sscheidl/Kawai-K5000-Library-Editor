@@ -58,10 +58,9 @@ const Corpus& corpus() {
         Corpus result;
         const std::string root = K5000_REFERENCE_CORPUS_DIR;
         if (root.empty()) {
-            result.reason =
-                "K5000_REFERENCE_CORPUS is not set. Configure with "
-                "-DK5000_REFERENCE_CORPUS=<path to an extracted corpus directory> "
-                "to enable the golden tests.";
+            result.reason = "K5000_REFERENCE_CORPUS is not set. Configure with "
+                            "-DK5000_REFERENCE_CORPUS=<path to an extracted corpus directory> "
+                            "to enable the golden tests.";
             return result;
         }
 
@@ -91,14 +90,13 @@ const Corpus& corpus() {
             }
             CorpusFile file;
             file.path = it->path();
-            file.bytes.assign(std::istreambuf_iterator<char>(stream),
-                              std::istreambuf_iterator<char>());
+            file.bytes.assign(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
             (ext == ".kaa" ? result.kaa : result.ka1).push_back(std::move(file));
         }
 
         if (result.ka1.empty() && result.kaa.empty()) {
-            result.reason = "No .KA1 or .KAA files found under " + root
-                            + " (the corpus may still be inside an archive).";
+            result.reason =
+                "No .KA1 or .KAA files found under " + root + " (the corpus may still be inside an archive).";
             return result;
         }
 
@@ -134,8 +132,7 @@ TEST_CASE("corpus: every file the corpus offers is actually read", "[golden][saf
     CHECK(c.unreadable.empty());
 }
 
-TEST_CASE("corpus: every structurally valid KA1 satisfies the checksum rule",
-          "[golden][ka1][checksum]") {
+TEST_CASE("corpus: every structurally valid KA1 satisfies the checksum rule", "[golden][ka1][checksum]") {
     const Corpus& c = corpus();
     if (!c.configured) {
         SKIP(c.reason);
@@ -179,8 +176,7 @@ TEST_CASE("corpus: every structurally valid KA1 satisfies the checksum rule",
         for (const auto& diagnostic : single.diagnostics) {
             kitFailed = kitFailed || diagnostic.code == DiagnosticCode::AddWaveKitChecksumMismatch;
             ambiguousFile =
-                ambiguousFile
-                || diagnostic.code == DiagnosticCode::LengthConflictsWithSourceDescriptors;
+                ambiguousFile || diagnostic.code == DiagnosticCode::LengthConflictsWithSourceDescriptors;
         }
 
         if (single.structuralSize != file.bytes.size()) {
@@ -207,14 +203,12 @@ TEST_CASE("corpus: every structurally valid KA1 satisfies the checksum rule",
         }
     }
 
-    INFO("KA1 files: " << c.ka1.size() << "  structurally complete: " << complete
-                       << "  patch checksum OK: " << patchChecksumOk
-                       << "  patch checksum FAILED: " << patchChecksumFailed
-                       << "  ADD kit checksum failed: " << kitChecksumFailed
-                       << "  structurally ambiguous: " << ambiguous << "  truncated: " << truncated
-                       << "  malformed: " << malformed
-                       << "  (incomplete files also failing the checksum: "
-                       << incompleteWithBadChecksum << ")");
+    INFO("KA1 files: " << c.ka1.size() << "  structurally complete: " << complete << "  patch checksum OK: "
+                       << patchChecksumOk << "  patch checksum FAILED: " << patchChecksumFailed
+                       << "  ADD kit checksum failed: " << kitChecksumFailed << "  structurally ambiguous: "
+                       << ambiguous << "  truncated: " << truncated << "  malformed: " << malformed
+                       << "  (incomplete files also failing the checksum: " << incompleteWithBadChecksum
+                       << ")");
 
     CHECK(complete > 0);
 
@@ -228,8 +222,7 @@ TEST_CASE("corpus: every structurally valid KA1 satisfies the checksum rule",
     CHECK(kitChecksumFailed <= 4);
 }
 
-TEST_CASE("corpus: the parser never crashes and never silently repairs",
-          "[golden][ka1][malformed]") {
+TEST_CASE("corpus: the parser never crashes and never silently repairs", "[golden][ka1][malformed]") {
     const Corpus& c = corpus();
     if (!c.configured) {
         SKIP(c.reason);
@@ -255,8 +248,7 @@ TEST_CASE("corpus: the parser never crashes and never silently repairs",
     }
 }
 
-TEST_CASE("corpus: every bank parses and every occupied slot checksums",
-          "[golden][kaa]") {
+TEST_CASE("corpus: every bank parses and every occupied slot checksums", "[golden][kaa]") {
     const Corpus& c = corpus();
     if (!c.configured) {
         SKIP(c.reason);
@@ -285,8 +277,8 @@ TEST_CASE("corpus: every bank parses and every occupied slot checksums",
             if (patch.single.checksumMatches()) {
                 ++checksumOk;
             } else {
-                WARN(file.path.filename().string() << " slot " << patch.slot + 1
-                                                   << ": patch checksum mismatch");
+                WARN(file.path.filename().string()
+                     << " slot " << patch.slot + 1 << ": patch checksum mismatch");
             }
             // The extracted range must be the structural range, nothing else.
             CHECK(patch.payload().size() == patch.single.structuralSize);
@@ -360,8 +352,7 @@ TEST_CASE("corpus: extracted patches are byte-identical to standalone KA1 files"
     }
 }
 
-TEST_CASE("corpus: fragmented banks do not leak padding into payloads",
-          "[golden][kaa][invariant]") {
+TEST_CASE("corpus: fragmented banks do not leak padding into payloads", "[golden][kaa][invariant]") {
     const Corpus& c = corpus();
     if (!c.configured) {
         SKIP(c.reason);
@@ -415,8 +406,7 @@ TEST_CASE("corpus: fragmented banks do not leak padding into payloads",
     }
 }
 
-TEST_CASE("corpus: parse results match the independently generated manifest",
-          "[golden][manifest]") {
+TEST_CASE("corpus: parse results match the independently generated manifest", "[golden][manifest]") {
     const Corpus& c = corpus();
     if (!c.configured) {
         SKIP(c.reason);
@@ -429,8 +419,8 @@ TEST_CASE("corpus: parse results match the independently generated manifest",
         std::filesystem::path(K5000_FIXTURE_DIR) / ".." / "REFERENCE_MANIFEST.csv";
     std::ifstream manifest(manifestPath);
     if (!manifest) {
-        SKIP("No manifest at " + manifestPath.string()
-             + " - regenerate with tools/research/make_manifest.py");
+        SKIP("No manifest at " + manifestPath.string() +
+             " - regenerate with tools/research/make_manifest.py");
     }
 
     std::map<std::string, int> expected;
@@ -458,10 +448,9 @@ TEST_CASE("corpus: parse results match the independently generated manifest",
     }
 
     if (manifestRows != static_cast<int>(c.ka1.size() + c.kaa.size())) {
-        SKIP("The manifest describes " + std::to_string(manifestRows)
-             + " files but the configured corpus has "
-             + std::to_string(c.ka1.size() + c.kaa.size())
-             + ". Regenerate the manifest from the same corpus to enable this check.");
+        SKIP("The manifest describes " + std::to_string(manifestRows) +
+             " files but the configured corpus has " + std::to_string(c.ka1.size() + c.kaa.size()) +
+             ". Regenerate the manifest from the same corpus to enable this check.");
     }
 
     std::map<std::string, int> actual;
@@ -482,8 +471,7 @@ TEST_CASE("corpus: parse results match the independently generated manifest",
         CHECK(actual[key] == count);
     }
     for (const auto& [key, count] : actual) {
-        INFO("parser produced " << key << " = " << count << ", manifest expected "
-                                << expected[key]);
+        INFO("parser produced " << key << " = " << count << ", manifest expected " << expected[key]);
         CHECK(expected[key] == count);
     }
 }

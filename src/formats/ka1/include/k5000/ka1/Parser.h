@@ -26,13 +26,11 @@ namespace k5000::ka1 {
 /// bytes, or when `sources` is outside 1..6. It must not return a number in
 /// that case: 0x00 is a perfectly legal checksum, so a fabricated one is
 /// indistinguishable from a computed one at the call site.
-[[nodiscard]] std::optional<std::uint8_t> computeChecksum(std::span<const std::uint8_t> payload,
-                                                          int sources);
+[[nodiscard]] std::optional<std::uint8_t> computeChecksum(std::span<const std::uint8_t> payload, int sources);
 
 /// Checksum of one ADD wave kit: (sum(kit[1:]) + 0xA5) & 0x7F.
 /// Returns nullopt unless `kit` is exactly kAddWaveKitSize bytes.
-[[nodiscard]] std::optional<std::uint8_t> computeAddWaveKitChecksum(
-    std::span<const std::uint8_t> kit);
+[[nodiscard]] std::optional<std::uint8_t> computeAddWaveKitChecksum(std::span<const std::uint8_t> kit);
 
 struct ParseOptions {
     /// A standalone .KA1 file must end exactly where its structure ends;

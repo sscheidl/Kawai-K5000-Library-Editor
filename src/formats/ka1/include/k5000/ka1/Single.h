@@ -49,9 +49,7 @@ struct Single {
     ValidationState validationState = ValidationState::Malformed;
     std::vector<Diagnostic> diagnostics;
 
-    [[nodiscard]] bool checksumMatches() const noexcept {
-        return checksumStored == checksumCalculated;
-    }
+    [[nodiscard]] bool checksumMatches() const noexcept { return checksumStored == checksumCalculated; }
 
     /// Name with trailing padding removed, for lists and file names.
     [[nodiscard]] std::string trimmedName() const;

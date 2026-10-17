@@ -203,8 +203,7 @@ TEST_CASE("length and descriptors disagreeing is ambiguous, not a guess", "[ka1]
     // Reproduces the one corpus file where the file length implies three ADD
     // sources while the wave kit numbers imply two. Neither reading may win.
     auto payload = test::makeSingle("Ambiguou", {add, add, add, pcm});
-    const std::size_t waveOffset =
-        ka1::sourceDescriptorOffset(2) + ka1::kWaveKitOffsetInSource;
+    const std::size_t waveOffset = ka1::sourceDescriptorOffset(2) + ka1::kWaveKitOffsetInSource;
     payload[waveOffset] = 0x3F; // 8186, out of range - as in the corpus
     payload[waveOffset + 1] = 0x7A;
     test::refreshChecksum(payload);
